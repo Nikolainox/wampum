@@ -2,7 +2,7 @@
 <html lang="fi">
 <head>
   <meta charset="UTF-8" />
-  <title>Mind·Body·Mental·Fitness – Billionaire Ops</title>
+  <title>FI Varikko Engine – Päivän telemetria</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="stylesheet" href="styles.css" />
 </head>
@@ -10,440 +10,238 @@
   <div class="app">
     <header class="app-header">
       <div class="brand">
-        <span class="brand-mark">MBMF</span>
+        <span class="brand-mark">VARIKKO</span>
         <div class="brand-text">
-          <h1>Billionaire Human Ops Engine</h1>
-          <p>Päiväkortti, joka lukee mieltä, kehoa ja käytöstä</p>
+          <h1>FI Varikko Engine</h1>
+          <p>F1-tyylinen telemetria keholle ja mielelle</p>
         </div>
       </div>
       <nav class="top-nav">
-        <button class="nav-btn active" data-view="today">Tänään</button>
-        <button class="nav-btn" data-view="history">Historia</button>
+        <button class="nav-btn active" data-view="today">Tämän päivän stintti</button>
+        <button class="nav-btn" data-view="history">Päiväkirja (telemetria)</button>
       </nav>
     </header>
 
     <main>
-      <!-- TÄNÄÄN -NÄKYMÄ -->
+      <!-- TÄNÄÄN -->
       <section id="view-today" class="view active">
-
-        <!-- JARVIS HUB -->
-        <section class="jarvis-hub" id="jarvisHub">
-          <div class="jarvis-header">
-            <span class="jarvis-label">JARVIS HUB</span>
-            <span class="jarvis-status" id="jarvisStatus">Analysoidaan päivän signaaleja…</span>
+        <!-- VARIKKO RADIO -->
+        <section class="pit-radio" id="pitRadioCard">
+          <div class="pit-header">
+            <span class="pit-label">VARIKKORADIO</span>
+            <span class="pit-status" id="pitStatus">Ladataan tämän päivän rataa…</span>
           </div>
-          <div class="jarvis-stream">
-            <div class="jarvis-pulse"></div>
-            <p id="jarvisMessage">
-              Ladataan datapaketti…
+          <div class="pit-body">
+            <div class="pit-led"></div>
+            <p id="pitMessage">
+              Telemetria käynnistyy, pidä auto radalla ensimmäiset kierrokset.
             </p>
           </div>
         </section>
 
+        <!-- PÄIVÄN KORTTI -->
         <section class="card today-card" id="todayCard">
           <div class="card-header">
             <div>
-              <h2>Päiväkortti · MAX DATA</h2>
+              <h2>Päivän rata · telemetriakortti</h2>
               <p id="todayDateLabel"></p>
             </div>
-            <div class="performance-chip">
-              <span class="chip-label">Performance probability</span>
-              <span class="chip-value" id="performanceValue">– %</span>
+            <div class="readiness-chip">
+              <span class="chip-label">Race readiness</span>
+              <span class="chip-value" id="readinessValue">– %</span>
             </div>
           </div>
 
-          <!-- HOLOGRAMMI 4 KERROSTA -->
-          <div class="hologram-grid">
-            <div class="holo-sphere" id="holoMind">
-              <span class="holo-label">Mind</span>
-              <span class="holo-value" id="mindValue">0</span>
-            </div>
-            <div class="holo-sphere" id="holoBody">
-              <span class="holo-label">Body</span>
-              <span class="holo-value" id="bodyValue">0</span>
-            </div>
-            <div class="holo-sphere" id="holoMental">
-              <span class="holo-label">Mental</span>
-              <span class="holo-value" id="mentalValue">0</span>
-            </div>
-            <div class="holo-sphere" id="holoFitness">
-              <span class="holo-label">Fitness</span>
-              <span class="holo-value" id="fitnessValue">0</span>
-            </div>
+          <!-- PIKA YHTEENVETO -->
+          <div class="quick-row">
+            <div class="quick-pill" id="dayModeTag">MODE: –</div>
+            <div class="quick-pill" id="hardDayTag">PÄIVÄ: –</div>
           </div>
 
-          <!-- PIKA-TIIVISTE -->
-          <div class="quick-tags-row">
-            <div class="quick-pill" id="behaviorModeTag">MODE: –</div>
-            <div class="quick-pill" id="environmentTag">ENV: –</div>
-            <div class="quick-pill" id="momentumTag">MOMENTUM: –</div>
-          </div>
-
-          <!-- MIND -->
+          <!-- RADAN TYYPPI -->
           <div class="section-block">
             <div class="section-header">
-              <h3>Mind · kognitiivinen kone</h3>
-              <span class="section-score" id="mindScoreLabel">0/10</span>
+              <h3>Ratatyyppi</h3>
+            </div>
+            <div class="select-row">
+              <label>Päivän luonne</label>
+              <select data-field="dayType">
+                <option value="practice">Harjoitus / treenipäivä</option>
+                <option value="qualifying">Karsinta / suorituspaine</option>
+                <option value="race" selected>Race day</option>
+                <option value="safety">Safety car -päivä (selviytyminen)</option>
+              </select>
+            </div>
+            <div class="slider-row">
+              <div class="slider-label">
+                <span>Päivän vaikeus</span>
+                <span id="difficultyLabel" class="slider-value-label">5/10</span>
+              </div>
+              <input type="range" min="1" max="10" value="5"
+                     data-field="difficulty" />
+            </div>
+          </div>
+
+          <!-- TELEMETRIA – FUEL / GRIP / PRESSURE -->
+          <div class="section-block">
+            <div class="section-header">
+              <h3>Moottori & renkaat</h3>
+            </div>
+
+            <div class="sliders">
+              <div class="slider-row">
+                <div class="slider-label">
+                  <span>Fuel · energia</span>
+                  <span id="energyLabel" class="slider-value-label">5/10</span>
+                </div>
+                <input type="range" min="1" max="10" value="5"
+                       data-field="energy" />
+              </div>
+
+              <div class="slider-row">
+                <div class="slider-label">
+                  <span>Grip · fokus</span>
+                  <span id="focusLabel" class="slider-value-label">5/10</span>
+                </div>
+                <input type="range" min="1" max="10" value="5"
+                       data-field="focus" />
+              </div>
+
+              <div class="slider-row">
+                <div class="slider-label">
+                  <span>Renkaiden kuluma · kehon kuormitus</span>
+                  <span id="bodyLoadLabel" class="slider-value-label">5/10</span>
+                </div>
+                <input type="range" min="1" max="10" value="5"
+                       data-field="bodyLoad" />
+              </div>
+            </div>
+          </div>
+
+          <!-- STRESSI / SÄÄ -->
+          <div class="section-block">
+            <div class="section-header">
+              <h3>Sää ja liikenne</h3>
             </div>
             <div class="sliders">
               <div class="slider-row">
                 <div class="slider-label">
-                  <span>Keskittyminen</span>
-                  <span id="mind_focus_label" class="slider-value-label">5/10</span>
+                  <span>Stressi · liikenne radalla</span>
+                  <span id="stressLabel" class="slider-value-label">5/10</span>
                 </div>
                 <input type="range" min="1" max="10" value="5"
-                       data-section="mind" data-field="focus"
-                       data-label-id="mind_focus_label" />
+                       data-field="stress" />
               </div>
 
               <div class="slider-row">
                 <div class="slider-label">
-                  <span>Aloituskitka</span>
-                  <span id="mind_friction_label" class="slider-value-label">5/10</span>
+                  <span>Mieliala · näkyvyys</span>
+                  <span id="moodLabel" class="slider-value-label">5/10</span>
                 </div>
                 <input type="range" min="1" max="10" value="5"
-                       data-section="mind" data-field="friction"
-                       data-label-id="mind_friction_label" />
+                       data-field="mood" />
               </div>
+            </div>
 
-              <div class="slider-row">
-                <div class="slider-label">
-                  <span>Ajattelun intensiteetti</span>
-                  <span id="mind_intensity_label" class="slider-value-label">5/10</span>
-                </div>
-                <input type="range" min="1" max="10" value="5"
-                       data-section="mind" data-field="intensity"
-                       data-label-id="mind_intensity_label" />
-              </div>
-
-              <div class="select-row">
-                <label>Dominantti ajattelutila</label>
-                <select data-section="mind" data-field="mode">
-                  <option value="shallow">Shallow / autopilotti</option>
-                  <option value="normal" selected>Normaali</option>
-                  <option value="deep">Deep work</option>
-                </select>
-              </div>
+            <div class="select-row">
+              <label>Uni viime yönä</label>
+              <select data-field="sleep">
+                <option value="bad">Heikko</option>
+                <option value="ok" selected>OK</option>
+                <option value="good">Hyvä</option>
+              </select>
             </div>
           </div>
 
-          <!-- BODY -->
+          <!-- MOTIVAATIO / STRATEGIA -->
           <div class="section-block">
             <div class="section-header">
-              <h3>Body · biologinen moottori</h3>
-              <span class="section-score" id="bodyScoreLabel">0/10</span>
+              <h3>Strategia & kuljettajan tila</h3>
             </div>
             <div class="sliders">
               <div class="slider-row">
                 <div class="slider-label">
-                  <span>Energia</span>
-                  <span id="body_energy_label" class="slider-value-label">5/10</span>
+                  <span>Motivaatio</span>
+                  <span id="motivationLabel" class="slider-value-label">5/10</span>
                 </div>
                 <input type="range" min="1" max="10" value="5"
-                       data-section="body" data-field="energy"
-                       data-label-id="body_energy_label" />
+                       data-field="motivation" />
               </div>
 
               <div class="slider-row">
                 <div class="slider-label">
-                  <span>Lihasväsymys</span>
-                  <span id="body_soreness_label" class="slider-value-label">5/10</span>
+                  <span>Itseluottamus</span>
+                  <span id="confidenceLabel" class="slider-value-label">5/10</span>
                 </div>
                 <input type="range" min="1" max="10" value="5"
-                       data-section="body" data-field="soreness"
-                       data-label-id="body_soreness_label" />
+                       data-field="confidence" />
               </div>
+            </div>
 
-              <div class="slider-row">
-                <div class="slider-label">
-                  <span>Unen laatu</span>
-                  <span id="body_sleepQuality_label" class="slider-value-label">5/10</span>
-                </div>
-                <input type="range" min="1" max="10" value="5"
-                       data-section="body" data-field="sleepQuality"
-                       data-label-id="body_sleepQuality_label" />
-              </div>
-
-              <div class="input-inline">
-                <label>Unen määrä (h)</label>
-                <input type="number" min="0" max="14" step="0.5" value="7"
-                       data-section="body" data-field="sleepHours" />
-              </div>
-
-              <div class="select-row">
-                <label>Ravintotila</label>
-                <select data-section="body" data-field="nutrition">
-                  <option value="under">Alisyöty</option>
-                  <option value="ok" selected>Optimi</option>
-                  <option value="over">Ylikuormitettu / raskas</option>
-                </select>
-              </div>
+            <div class="select-row">
+              <label>Päivän päätavoite</label>
+              <select data-field="goal">
+                <option value="survive">Selviydy ehjänä maaliin</option>
+                <option value="progress" selected>Pieni kehitys / oppiminen</option>
+                <option value="push">Max suoritus (PB)</option>
+              </select>
             </div>
           </div>
 
-          <!-- MENTAL -->
-          <div class="section-block">
-            <div class="section-header">
-              <h3>Mental · tunne & stressi</h3>
-              <span class="section-score" id="mentalScoreLabel">0/10</span>
-            </div>
-            <div class="sliders">
-              <div class="slider-row">
-                <div class="slider-label">
-                  <span>Stressi</span>
-                  <span id="mental_stress_label" class="slider-value-label">5/10</span>
-                </div>
-                <input type="range" min="1" max="10" value="5"
-                       data-section="mental" data-field="stress"
-                       data-label-id="mental_stress_label" />
-              </div>
-
-              <div class="slider-row">
-                <div class="slider-label">
-                  <span>Positiivisen tunteen osuus</span>
-                  <span id="mental_positivity_label" class="slider-value-label">5/10</span>
-                </div>
-                <input type="range" min="1" max="10" value="5"
-                       data-section="mental" data-field="positivity"
-                       data-label-id="mental_positivity_label" />
-              </div>
-
-              <div class="select-row">
-                <label>Dominantti tunne</label>
-                <select data-section="mental" data-field="tone">
-                  <option value="calm">Rauhallinen</option>
-                  <option value="controlled" selected>Kontrollissa</option>
-                  <option value="irritated">Ärtynyt</option>
-                  <option value="anxious">Ahdistunut</option>
-                </select>
-              </div>
-
-              <div class="select-row">
-                <label>Joe Navarro -signaali</label>
-                <select data-section="mental" data-field="redFlag">
-                  <option value="none" selected>Ei selkeitä</option>
-                  <option value="avoidance">Välttely / vetäytyminen</option>
-                  <option value="restless">Poikkeava levottomuus</option>
-                  <option value="aggressive">Sisäinen aggressio</option>
-                </select>
-              </div>
-            </div>
+          <!-- TELEMETRIA YHTEENVETO -->
+          <div class="summary-block">
+            <h3>Stint-strategia</h3>
+            <p id="stintSummary">Täytä telemetria, niin varikko suunnittelee päivän stinteiksi.</p>
+            <p id="pitPlan" class="pit-plan"></p>
           </div>
 
-          <!-- FITNESS -->
-          <div class="section-block">
-            <div class="section-header">
-              <h3>Fitness · suorituskyky</h3>
-              <span class="section-score" id="fitnessScoreLabel">0/10</span>
-            </div>
-            <div class="sliders">
-              <div class="slider-row">
-                <div class="slider-label">
-                  <span>Voima</span>
-                  <span id="fitness_strength_label" class="slider-value-label">5/10</span>
-                </div>
-                <input type="range" min="1" max="10" value="5"
-                       data-section="fitness" data-field="strength"
-                       data-label-id="fitness_strength_label" />
-              </div>
-
-              <div class="slider-row">
-                <div class="slider-label">
-                  <span>Kestävyys</span>
-                  <span id="fitness_endurance_label" class="slider-value-label">5/10</span>
-                </div>
-                <input type="range" min="1" max="10" value="5"
-                       data-section="fitness" data-field="endurance"
-                       data-label-id="fitness_endurance_label" />
-              </div>
-
-              <div class="slider-row">
-                <div class="slider-label">
-                  <span>Liikkuvuus</span>
-                  <span id="fitness_mobility_label" class="slider-value-label">5/10</span>
-                </div>
-                <input type="range" min="1" max="10" value="5"
-                       data-section="fitness" data-field="mobility"
-                       data-label-id="fitness_mobility_label" />
-              </div>
-
-              <div class="slider-row">
-                <div class="slider-label">
-                  <span>Päivän rasittavuus (RPE)</span>
-                  <span id="fitness_rpe_label" class="slider-value-label">5/10</span>
-                </div>
-                <input type="range" min="1" max="10" value="5"
-                       data-section="fitness" data-field="rpe"
-                       data-label-id="fitness_rpe_label" />
-              </div>
-            </div>
-          </div>
-
-          <!-- BEHAVIOR -->
-          <div class="section-block">
-            <div class="section-header">
-              <h3>Behavior · käytöksen logiikka</h3>
-            </div>
-            <div class="sliders">
-              <div class="slider-row">
-                <div class="slider-label">
-                  <span>Aloitusviive (kuinka vaikea aloittaa)</span>
-                  <span id="behavior_startLatency_label" class="slider-value-label">5/10</span>
-                </div>
-                <input type="range" min="1" max="10" value="5"
-                       data-section="behavior" data-field="startLatency"
-                       data-label-id="behavior_startLatency_label" />
-              </div>
-
-              <div class="slider-row">
-                <div class="slider-label">
-                  <span>Keskeytysten määrä</span>
-                  <span id="behavior_interruptions_label" class="slider-value-label">5/10</span>
-                </div>
-                <input type="range" min="1" max="10" value="5"
-                       data-section="behavior" data-field="interruptions"
-                       data-label-id="behavior_interruptions_label" />
-              </div>
-
-              <div class="slider-row">
-                <div class="slider-label">
-                  <span>Screentime / some-immuniteetti</span>
-                  <span id="behavior_distraction_label" class="slider-value-label">5/10</span>
-                </div>
-                <input type="range" min="1" max="10" value="5"
-                       data-section="behavior" data-field="distraction"
-                       data-label-id="behavior_distraction_label" />
-              </div>
-
-              <div class="select-row">
-                <label>Dominant behavior mode</label>
-                <select data-section="behavior" data-field="pattern">
-                  <option value="builder" selected>Builder (rakentava)</option>
-                  <option value="responder">Responder (reagoiva)</option>
-                  <option value="avoider">Avoider (vetäytyvä)</option>
-                  <option value="overdriver">Overdriver (yli-ohjaava)</option>
-                </select>
-              </div>
-            </div>
-          </div>
-
-          <!-- ENVIRONMENT -->
-          <div class="section-block">
-            <div class="section-header">
-              <h3>Environment · ympäristö</h3>
-            </div>
-            <div class="sliders">
-              <div class="slider-row">
-                <div class="slider-label">
-                  <span>Ympäristön energia</span>
-                  <span id="env_energy_label" class="slider-value-label">5/10</span>
-                </div>
-                <input type="range" min="1" max="10" value="5"
-                       data-section="environment" data-field="energy"
-                       data-label-id="env_energy_label" />
-              </div>
-
-              <div class="select-row">
-                <label>Työtila</label>
-                <select data-section="environment" data-field="workspace">
-                  <option value="bad">Huono</option>
-                  <option value="neutral" selected>OK</option>
-                  <option value="good">Hyvä</option>
-                </select>
-              </div>
-
-              <div class="select-row">
-                <label>Sosiaalinen ympäristö</label>
-                <select data-section="environment" data-field="social">
-                  <option value="draining">Kuluttava</option>
-                  <option value="neutral" selected>Neutraali</option>
-                  <option value="supportive">Tukeva</option>
-                </select>
-              </div>
-            </div>
-          </div>
-
-          <!-- MOTIVATION -->
-          <div class="section-block">
-            <div class="section-header">
-              <h3>Motivation · momentum</h3>
-            </div>
-            <div class="sliders">
-              <div class="slider-row">
-                <div class="slider-label">
-                  <span>Tavoitteen selkeys</span>
-                  <span id="motivation_goalClarity_label" class="slider-value-label">5/10</span>
-                </div>
-                <input type="range" min="1" max="10" value="5"
-                       data-section="motivation" data-field="goalClarity"
-                       data-label-id="motivation_goalClarity_label" />
-              </div>
-
-              <div class="slider-row">
-                <div class="slider-label">
-                  <span>Sitoutuminen</span>
-                  <span id="motivation_commitment_label" class="slider-value-label">5/10</span>
-                </div>
-                <input type="range" min="1" max="10" value="5"
-                       data-section="motivation" data-field="commitment"
-                       data-label-id="motivation_commitment_label" />
-              </div>
-
-              <div class="slider-row">
-                <div class="slider-label">
-                  <span>Passio vs pelko (10 = passio)</span>
-                  <span id="motivation_passion_label" class="slider-value-label">5/10</span>
-                </div>
-                <input type="range" min="1" max="10" value="5"
-                       data-section="motivation" data-field="passion"
-                       data-label-id="motivation_passion_label" />
-              </div>
-            </div>
-          </div>
-
-          <!-- NOTES -->
+          <!-- MUUT MUISTIINPANOT -->
           <div class="notes-block">
-            <label for="notes">Päivän lyhyt logi (max 3 riviä):</label>
-            <textarea id="notes" rows="3" placeholder="Mitä tärkeää tänään tapahtuu / tapahtui?"></textarea>
+            <label for="notes">Lyhyt merkintä päivästä (1–3 riviä):</label>
+            <textarea id="notes" rows="3" placeholder="Esim. mikä tekee tästä päivästä vaikean / tärkeän?"></textarea>
           </div>
 
           <div class="card-footer">
             <div class="status" id="statusMessage">Tallennus: localStorage (offline)</div>
-            <button id="finalizeBtn" class="primary-btn">Finalisoi päivä ja lisää pakkaan</button>
+            <button id="finalizeBtn" class="primary-btn">Lukitse telemetria tälle päivälle</button>
           </div>
         </section>
 
         <p class="hint">
-          Tuplaklikkaa korttia zoomataksesi · pyyhkäise vasemmalle siirtyäksesi historiaan
+          Tuplaklikkaa korttia zoomataksesi · varikkoradio reagoi joka muutokseen.
         </p>
       </section>
 
-      <!-- HISTORIA -NÄKYMÄ -->
+      <!-- HISTORIA -->
       <section id="view-history" class="view">
         <section class="card history-card">
           <div class="card-header">
             <div>
-              <h2>Korttipakka (historia)</h2>
-              <p>Yksi kortti jokaista päivää kohti · MAX data mukana</p>
+              <h2>Telemetria-arkisto</h2>
+              <p>Näet, miten selviät vaikeista päivistä kierros kierrokselta.</p>
             </div>
             <button id="exportBtn" class="ghost-btn">Lataa data (JSON)</button>
           </div>
 
           <div class="history-deck" id="historyList">
-            <!-- kortit generoidaan JS:llä -->
+            <!-- Päiväkortit generoidaan JS:llä -->
           </div>
 
           <div class="history-detail" id="historyDetail">
-            <p>Valitse kortti pakasta nähdäksesi tarkemmat tiedot.</p>
+            <p>Valitse päivä nähdäksesi telemetrian ja varikkostrategian.</p>
           </div>
         </section>
 
         <p class="hint">
-          Pyyhkäise oikealle palataksesi tämän päivän korttiin
+          Palaa vasemmalle välilehdelle “Tämän päivän stintti” keskittyäksesi tähän hetkeen.
         </p>
       </section>
     </main>
   </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
 
   <script src="app.js"></script>
 </body>
