@@ -2,149 +2,256 @@
 <html lang="fi">
 <head>
   <meta charset="UTF-8" />
-  <title>Morning Ignition OS</title>
+  <title>FI Varikko Engine + Habit Reels</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
   <div class="app">
-
     <header class="app-header">
       <div class="brand">
-        <span class="brand-mark">MIOS</span>
+        <span class="brand-mark">VARIKKO</span>
         <div class="brand-text">
-          <h1>Morning Ignition OS</h1>
-          <p>Yksi käynnistys. Yksi mikroteko. Yksi parempi päivä.</p>
+          <h1>FI Varikko Engine</h1>
+          <p>F1-telemetria + Habit Reels keholle ja mielelle</p>
         </div>
       </div>
-
-      <div class="stats-bar">
-        <div class="stat-pill">
-          <span>Starts</span>
-          <strong id="statTotalStarts">0</strong>
-        </div>
-        <div class="stat-pill">
-          <span>Streak</span>
-          <strong id="statCurrentStreak">0</strong>
-        </div>
-        <div class="stat-pill">
-          <span>Best</span>
-          <strong id="statBestStreak">0</strong>
-        </div>
-        <div class="stat-pill">
-          <span>Hard aamut</span>
-          <strong id="statHardMornings">0</strong>
-        </div>
-      </div>
+      <nav class="top-nav">
+        <button class="nav-btn active" data-view="today">Tämän päivän stintti</button>
+        <button class="nav-btn" data-view="history">Telemetria-arkisto</button>
+      </nav>
     </header>
 
     <main>
-      <!-- START PANEL -->
-      <section id="startPanel" class="panel">
-        <div class="card start-card">
-          <h2>Aloita päivä yhdellä painalluksella</h2>
-          <p class="start-copy">
-            Tämän appin ainoa tehtävä: auttaa sinua käynnistämään päivän.
-            Ei päiväkirjaa, ei analyysiparalyysiä. Vain ignition.
-          </p>
+      <!-- TÄNÄÄN -->
+      <section id="view-today" class="view active">
+        <!-- VARIKKORADIO -->
+        <section class="pit-radio" id="pitRadioCard">
+          <div class="pit-header">
+            <span class="pit-label">VARIKKORADIO</span>
+            <span class="pit-status" id="pitStatus">Ladataan tämän päivän rataa…</span>
+          </div>
+          <div class="pit-body">
+            <div class="pit-led"></div>
+            <p id="pitMessage">
+              Telemetria käynnistyy, pidä auto radalla ensimmäiset kierrokset.
+            </p>
+          </div>
+        </section>
 
-          <button id="startButton" class="start-button">
-            <span class="start-glow"></span>
-            <span class="start-label-main">START ENGINE</span>
-            <span class="start-label-sub">Käynnistä tämä aamu</span>
-          </button>
+        <!-- PÄIVÄN KORTTI -->
+        <section class="card today-card" id="todayCard">
+          <div class="card-header">
+            <div>
+              <h2>Päivän rata · telemetriakortti</h2>
+              <p id="todayDateLabel"></p>
+            </div>
+            <div class="readiness-chip">
+              <span class="chip-label">Race readiness</span>
+              <span class="chip-value" id="readinessValue">– %</span>
+            </div>
+          </div>
 
-          <p id="startHint" class="start-hint">
-            Päivä ei tarvitse olla täydellinen. Riittää että se alkaa.
-          </p>
-        </div>
+          <!-- PIKA YHTEENVETO -->
+          <div class="quick-row">
+            <div class="quick-pill" id="dayModeTag">MODE: –</div>
+            <div class="quick-pill" id="hardDayTag">PÄIVÄ: –</div>
+            <div class="quick-pill" id="habitSummaryTag">HABIT: –</div>
+          </div>
+
+          <!-- RADAN TYYPPI -->
+          <div class="section-block">
+            <div class="section-header">
+              <h3>Ratatyyppi</h3>
+            </div>
+            <div class="select-row">
+              <label>Päivän luonne</label>
+              <select data-field="dayType">
+                <option value="practice">Harjoitus / treenipäivä</option>
+                <option value="qualifying">Karsinta / suorituspaine</option>
+                <option value="race" selected>Race day</option>
+                <option value="safety">Safety car -päivä (selviytyminen)</option>
+              </select>
+            </div>
+            <div class="slider-row">
+              <div class="slider-label">
+                <span>Päivän vaikeus</span>
+                <span id="difficultyLabel" class="slider-value-label">5/10</span>
+              </div>
+              <input type="range" min="1" max="10" value="5"
+                     data-field="difficulty" />
+            </div>
+          </div>
+
+          <!-- TELEMETRIA – FUEL / GRIP / LOAD -->
+          <div class="section-block">
+            <div class="section-header">
+              <h3>Moottori & renkaat</h3>
+            </div>
+
+            <div class="sliders">
+              <div class="slider-row">
+                <div class="slider-label">
+                  <span>Fuel · energia</span>
+                  <span id="energyLabel" class="slider-value-label">5/10</span>
+                </div>
+                <input type="range" min="1" max="10" value="5"
+                       data-field="energy" />
+              </div>
+
+              <div class="slider-row">
+                <div class="slider-label">
+                  <span>Grip · fokus</span>
+                  <span id="focusLabel" class="slider-value-label">5/10</span>
+                </div>
+                <input type="range" min="1" max="10" value="5"
+                       data-field="focus" />
+              </div>
+
+              <div class="slider-row">
+                <div class="slider-label">
+                  <span>Renkaiden kuluma · kehon kuormitus</span>
+                  <span id="bodyLoadLabel" class="slider-value-label">5/10</span>
+                </div>
+                <input type="range" min="1" max="10" value="5"
+                       data-field="bodyLoad" />
+              </div>
+            </div>
+          </div>
+
+          <!-- STRESSI / SÄÄ -->
+          <div class="section-block">
+            <div class="section-header">
+              <h3>Sää ja liikenne</h3>
+            </div>
+            <div class="sliders">
+              <div class="slider-row">
+                <div class="slider-label">
+                  <span>Stressi · liikenne radalla</span>
+                  <span id="stressLabel" class="slider-value-label">5/10</span>
+                </div>
+                <input type="range" min="1" max="10" value="5"
+                       data-field="stress" />
+              </div>
+
+              <div class="slider-row">
+                <div class="slider-label">
+                  <span>Mieliala · näkyvyys</span>
+                  <span id="moodLabel" class="slider-value-label">5/10</span>
+                </div>
+                <input type="range" min="1" max="10" value="5"
+                       data-field="mood" />
+              </div>
+            </div>
+
+            <div class="select-row">
+              <label>Uni viime yönä</label>
+              <select data-field="sleep">
+                <option value="bad">Heikko</option>
+                <option value="ok" selected>OK</option>
+                <option value="good">Hyvä</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- MOTIVAATIO / STRATEGIA -->
+          <div class="section-block">
+            <div class="section-header">
+              <h3>Strategia & kuljettajan tila</h3>
+            </div>
+            <div class="sliders">
+              <div class="slider-row">
+                <div class="slider-label">
+                  <span>Motivaatio</span>
+                  <span id="motivationLabel" class="slider-value-label">5/10</span>
+                </div>
+                <input type="range" min="1" max="10" value="5"
+                       data-field="motivation" />
+              </div>
+
+              <div class="slider-row">
+                <div class="slider-label">
+                  <span>Itseluottamus</span>
+                  <span id="confidenceLabel" class="slider-value-label">5/10</span>
+                </div>
+                <input type="range" min="1" max="10" value="5"
+                       data-field="confidence" />
+              </div>
+            </div>
+
+            <div class="select-row">
+              <label>Päivän päätavoite</label>
+              <select data-field="goal">
+                <option value="survive">Selviydy ehjänä maaliin</option>
+                <option value="progress" selected>Pieni kehitys / oppiminen</option>
+                <option value="push">Max suoritus (PB)</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- HABIT REELS -->
+          <div class="habits-section">
+            <div class="section-header">
+              <h3>Habit Reels · pelikorttipakka</h3>
+              <span class="habit-help">Pyyhkäise vasen/oikea · tuplaklikkaa / tuplanapauta merkkaamaan</span>
+            </div>
+            <div id="habitReel" class="habit-reel">
+              <!-- kortti generoidaan JS:llä -->
+            </div>
+            <div id="habitDots" class="habit-dots">
+              <!-- pisteet generoidaan JS:llä -->
+            </div>
+          </div>
+
+          <!-- TELEMETRIA YHTEENVETO -->
+          <div class="summary-block">
+            <h3>Stint-strategia</h3>
+            <p id="stintSummary">Täytä telemetria, niin varikko suunnittelee päivän stinteiksi.</p>
+            <p id="pitPlan" class="pit-plan"></p>
+          </div>
+
+          <!-- MUISTIINPANOT -->
+          <div class="notes-block">
+            <label for="notes">Lyhyt merkintä päivästä (1–3 riviä):</label>
+            <textarea id="notes" rows="3" placeholder="Esim. mikä tekee tästä päivästä vaikean / tärkeän?"></textarea>
+          </div>
+
+          <div class="card-footer">
+            <div class="status" id="statusMessage">Tallennus: localStorage (offline)</div>
+            <button id="finalizeBtn" class="primary-btn">Lukitse telemetria tälle päivälle</button>
+          </div>
+        </section>
+
+        <p class="hint">
+          Tuplaklikkaa isoa korttia zoomataksesi · Habit-korttia tuplaklikkaamalla merkkaat habitin tehdyksi.
+        </p>
       </section>
 
-      <!-- MAIN PANEL (näkyy kun start painettu) -->
-      <section id="mainPanel" class="panel hidden">
-        <div class="card ignition-card">
-          <div class="ignition-header">
+      <!-- HISTORIA -->
+      <section id="view-history" class="view">
+        <section class="card history-card">
+          <div class="card-header">
             <div>
-              <h2>Aamun sytytys</h2>
-              <p id="todayLabel"></p>
+              <h2>Telemetria-arkisto</h2>
+              <p>Näet, miten selviät vaikeista päivistä kierros kierrokselta.</p>
             </div>
-            <div class="mode-pill" id="modePill">MODE: –</div>
+            <button id="exportBtn" class="ghost-btn">Lataa data (JSON)</button>
           </div>
 
-          <div class="ignition-steps">
-            <div class="step">
-              <h3>1. Keho</h3>
-              <p class="step-sub">Miten keho tuntuu herätessä?</p>
-              <div class="option-row" data-group="body">
-                <button class="option-btn" data-group="body" data-value="low">Low</button>
-                <button class="option-btn active" data-group="body" data-value="normal">Normaali</button>
-                <button class="option-btn" data-group="body" data-value="good">Hyvä</button>
-              </div>
-            </div>
-
-            <div class="step">
-              <h3>2. Mieli</h3>
-              <p class="step-sub">Miltä mieli tuntuu?</p>
-              <div class="option-row" data-group="mind">
-                <button class="option-btn" data-group="mind" data-value="heavy">Raskas</button>
-                <button class="option-btn active" data-group="mind" data-value="normal">Normaali</button>
-                <button class="option-btn" data-group="mind" data-value="clear">Selkeä</button>
-              </div>
-            </div>
-
-            <div class="step">
-              <h3>3. Intentio</h3>
-              <p class="step-sub">Mikä on tämän päivän moodi?</p>
-              <div class="option-row" data-group="intent">
-                <button class="option-btn" data-group="intent" data-value="recovery">Recovery</button>
-                <button class="option-btn active" data-group="intent" data-value="build">Build</button>
-                <button class="option-btn" data-group="intent" data-value="push">Push</button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- DAY CARD -->
-        <div class="card day-card">
-          <div class="day-header">
-            <div>
-              <h2>Päivän kortti</h2>
-              <p id="daySubtitle">Täytä aamutuntemus yllä, niin kortti päivittyy.</p>
-            </div>
-            <div class="difficulty-badge" id="difficultyBadge">–</div>
+          <div class="history-deck" id="historyList">
+            <!-- Päiväkortit generoidaan JS:llä -->
           </div>
 
-          <div class="energy-bar">
-            <div class="energy-labels">
-              <span>Predicted flow</span>
-              <span id="energyPercent">– %</span>
-            </div>
-            <div class="energy-track">
-              <div id="energyFill" class="energy-fill"></div>
-            </div>
+          <div class="history-detail" id="historyDetail">
+            <p>Valitse päivä nähdäksesi telemetrian, varikkostrategian ja habit-summan.</p>
           </div>
+        </section>
 
-          <div class="jarvis-block">
-            <h3>Jarvis-strategia</h3>
-            <p id="jarvisLine">
-              Kun starttaat aamun, saat tähän strategian, miten ajaa tämän päivän rata rikkomatta itseäsi.
-            </p>
-          </div>
-
-          <div class="micro-block">
-            <h3>Päivän mikroteko</h3>
-            <p id="microMove">
-              Starttaa aamu ensin. Sitten valitaan yksi mikroteko, joka luo momentumin.
-            </p>
-          </div>
-
-          <div class="footer-note">
-            <span id="momentumLine">Momentum ei ole mysteeri – se on toistettu startti.</span>
-          </div>
-        </div>
+        <p class="hint">
+          Palaa "Tämän päivän stintti" -näkymään keskittyäksesi tähän päivään.
+        </p>
       </section>
     </main>
-
   </div>
 
   <script src="app.js"></script>
