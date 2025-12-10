@@ -1,12 +1,4 @@
-// ================================================================
-// FI VARIKKO — ELITE HABIT TELEMETRY
-// Täysi app.js yhdessä tiedostossa
-// ================================================================
-
-// STORAGE KEY
 const STORAGE_KEY = "fi_varikko_library_elite_v2";
-
-// ---------- HABIT-KIRJASTO (99 hyvää habitia) ----------
 
 const HABIT_GROUPS = [
   {
@@ -36,7 +28,6 @@ const HABIT_GROUPS = [
       { id: "mind_learning_note", title: "Oppimismuistiinpano", desc: "Kirjoitit mitä opit." }
     ]
   },
-
   {
     id: "body",
     title: "Body & Performance",
@@ -64,7 +55,6 @@ const HABIT_GROUPS = [
       { id: "body_recovery_block", title: "Palautumisblokki", desc: "Jotain keholle palauttavaa." }
     ]
   },
-
   {
     id: "discipline",
     title: "Discipline & Identity",
@@ -92,7 +82,6 @@ const HABIT_GROUPS = [
       { id: "disc_no_quit", title: "Ei luovutusta", desc: "Et lopettanut kesken." }
     ]
   },
-
   {
     id: "purpose",
     title: "Purpose & Long Game",
@@ -120,7 +109,6 @@ const HABIT_GROUPS = [
       { id: "pur_course_progress", title: "Kurssin eteneminen", desc: "Pieni askel opiskelussa." }
     ]
   },
-
   {
     id: "recovery",
     title: "Recovery & Emotion",
@@ -148,8 +136,6 @@ const HABIT_GROUPS = [
     ]
   }
 ];
-
-// ---------- HUONOT HABITIT (25 kpl) ----------
 
 const BAD_HABITS = [
   { id: "bad_morning_phone", title: "Puhelin heti herätessä", penalty: 2 },
@@ -179,21 +165,16 @@ const BAD_HABITS = [
   { id: "bad_emotional_avoid", title: "Tunteen pakoilu", penalty: 2 }
 ];
 
-// ---------- PERUSTILAT ----------
-
 let days = [];
 let todayDay = null;
 let lastTapTime = 0;
 
-function forEachHabit(callback) {
-  HABIT_GROUPS.forEach(group => {
-    group.habits.forEach(h => callback(h, group));
-  });
+function forEachHabit(cb) {
+  HABIT_GROUPS.forEach(g => g.habits.forEach(h => cb(h, g)));
 }
 
 function getTodayISO() {
-  const d = new Date();
-  return d.toISOString().slice(0, 10);
+  return new Date().toISOString().slice(0, 10);
 }
 
 function formatFi(iso) {
@@ -201,20 +182,9 @@ function formatFi(iso) {
   return `${d}.${m}.${y}`;
 }
 
-function setStatus(msg) {
-  const el = document.getElementById("statusMessage");
-  if (el) el.textContent = msg;
-}
-
 function clamp01(v) {
   return Math.min(1, Math.max(0, v));
 }
-
-function getDayByISO(iso) {
-  return days.find(d => d.date === iso) || null;
-}
-
-// ---------- STORAGE ----------
 
 function loadDays() {
   try {
@@ -222,7 +192,7 @@ function loadDays() {
     if (!raw) return [];
     const parsed = JSON.parse(raw);
     return Array.isArray(parsed) ? parsed : [];
-  } catch (e) {
+  } catch {
     return [];
   }
 }
@@ -230,17 +200,13 @@ function loadDays() {
 function saveDays() {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(days));
-  } catch (e) {
-    console.error("save fail", e);
-  }
+  } catch {}
 }
 
-// ---------- DAY CREATION ----------
-
 function createEmptyHabitsState() {
-  const habits = {};
+  const obj = {};
   forEachHabit(h => {
-    habits[h.id] = {
+    obj[h.id] = {
       done: false,
       totalCompletions: 0,
       mastered: false,
@@ -250,22 +216,21 @@ function createEmptyHabitsState() {
       hardDayCount: 0
     };
   });
-  return habits;
+  return obj;
 }
 
 function createEmptyBadHabitsState() {
-  const st = {};
+  const obj = {};
   BAD_HABITS.forEach(b => {
-    st[b.id] = { done: false };
+    obj[b.id] = { done: false };
   });
-  return st;
+  return obj;
 }
 
 function defaultDay(dateISO) {
   return {
     id: "day_" + dateISO,
     date: dateISO,
-
     dayType: "race",
     difficulty: 5,
     energy: 5,
@@ -273,18 +238,14 @@ function defaultDay(dateISO) {
     mood: 5,
     sleep: "ok",
     motivation: 5,
-
     readiness: 50,
     momentum: 0,
     hardDay: false,
-
     habits: createEmptyHabitsState(),
     badHabits: createEmptyBadHabitsState(),
-
     notes: "",
     strategy: "",
     pitPlan: "",
-
     finalized: false,
     createdAt: new Date().toISOString()
   };
@@ -293,17 +254,13 @@ function defaultDay(dateISO) {
 function ensureToday() {
   const todayISO = getTodayISO();
   let d = days.find(x => x.date === todayISO);
-
   if (!d) {
     d = defaultDay(todayISO);
     days.push(d);
   }
-
   todayDay = d;
   saveDays();
 }
-
-// ---------- HABIT STATE ----------
 
 function getHabitState(day, habitId) {
   if (!day.habits[habitId]) {
@@ -327,27 +284,18 @@ function getBadHabitState(day, badId) {
   return day.badHabits[badId];
 }
 
-// ---------- STREAK ----------
-
 function computeStreakOfficial(habitId, refISO) {
   let streak = 0;
   const date = new Date(refISO);
-
-  function iso(d) {
-    return d.toISOString().slice(0, 10);
-  }
-
+  const iso = d => d.toISOString().slice(0, 10);
   while (true) {
-    const curISO = iso(date);
-    const day = getDayByISO(curISO);
+    const cur = iso(date);
+    const day = days.find(x => x.date === cur);
     if (!day || !day.finalized) break;
-
     if (!day.habits[habitId]?.done) break;
-
     streak++;
     date.setDate(date.getDate() - 1);
   }
-
   return streak;
 }
 
@@ -355,12 +303,9 @@ function computeStreakPreviewToday(habitId) {
   if (!todayDay) return 0;
   const official = computeStreakOfficial(habitId, todayDay.date);
   if (todayDay.finalized) return official;
-
   const st = getHabitState(todayDay, habitId);
   return st.done ? official + 1 : official;
 }
-
-// ---------- SUMMARIES ----------
 
 function computeHabitSummary(day) {
   let done = 0;
@@ -375,28 +320,21 @@ function computeHabitSummary(day) {
 function computeBadHabitsToday(day) {
   let penalty = 0;
   let count = 0;
-
   BAD_HABITS.forEach(b => {
     if (day.badHabits[b.id].done) {
       count++;
       penalty += b.penalty;
     }
   });
-
   return { count, penalty };
 }
 
-// ---------- READINESS & MOMENTUM ----------
-
 function computeBaseReadinessNoHabits(day) {
   const base = (day.energy + (11 - day.stress) + day.mood + day.motivation) / 40;
-
   let sleepBonus = 0;
   if (day.sleep === "good") sleepBonus = 0.08;
   else if (day.sleep === "bad") sleepBonus = -0.12;
-
   const diffPenalty = (day.difficulty - 5) / 25;
-
   let val = base + sleepBonus - diffPenalty;
   return Math.round(clamp01(val) * 100);
 }
@@ -409,108 +347,77 @@ function computeHabitScore(day) {
 function computeReadiness(day) {
   const base = computeBaseReadinessNoHabits(day);
   const habitScore = computeHabitScore(day);
-
   const bonus = habitScore * 15;
   let r = clamp01((base + bonus) / 100) * 100;
-
   day.readiness = Math.round(r);
-
   day.hardDay =
     day.difficulty >= 7 ||
     (day.energy <= 4 && day.stress >= 7) ||
     (day.sleep === "bad" && day.stress >= 6);
-
   return { habitScore, baseReadiness: base };
 }
-
-// ---------- 30D FREQUENCY ----------
 
 function computeHabit30dFrequency(habitId, refISO) {
   const sorted = [...days].sort((a, b) => (a.date < b.date ? -1 : 1));
   const idx = sorted.findIndex(x => x.date === refISO);
   if (idx === -1) return 0;
-
   const last30 = sorted.slice(Math.max(0, idx - 30), idx);
   if (!last30.length) return 0;
-
   let count = 0;
   last30.forEach(d => {
     if (d.finalized && d.habits[habitId]?.done) count++;
   });
-
   return count / last30.length;
 }
-
-// ---------- MOMENTUM (Pat Riley) ----------
 
 function computeMomentum(day, habitScore, baseReadiness) {
   const delta = day.readiness - baseReadiness;
   const deltaNorm = Math.max(-20, Math.min(20, delta));
   const quality = 1 + deltaNorm / 50;
-
   let goodTotal = 0;
-
   HABIT_GROUPS.forEach(group => {
     group.habits.forEach(habit => {
       const st = getHabitState(day, habit.id);
       if (!st.done) return;
-
       const streakOfficial = computeStreakOfficial(habit.id, day.date);
-      const preview = todayDay.finalized ? streakOfficial : streakOfficial + 1;
+      const preview = day.finalized ? streakOfficial : streakOfficial + 1;
       const streakFactor = Math.min(preview / 7, 1.5);
-
       const freq30 = computeHabit30dFrequency(habit.id, day.date);
-
       const consistency = clamp01(
         0.5 * (streakFactor / 1.5) + 0.5 * freq30
       );
-
       const direction = group.directionWeight || 1.2;
-
       const score = consistency * quality * direction;
       goodTotal += score;
     });
   });
-
   const { penalty } = computeBadHabitsToday(day);
   const badPenalty = penalty * 2.5;
-
   let raw = goodTotal * 25 - badPenalty * 5;
   raw = Math.max(0, Math.min(100, Math.round(raw)));
-
   day.momentum = raw;
   return raw;
 }
 
-// ---------- MONTE CARLO ----------
-
 function computeMonteCarloScore(habitId, refISO) {
   const sorted = [...days].sort((a, b) => (a.date < b.date ? -1 : 1));
   const idx = sorted.findIndex(x => x.date === refISO);
-
   const last30 = sorted.slice(Math.max(0, idx - 30), idx);
-
   let trials = 0;
   let successes = 0;
-
   last30.forEach(d => {
     if (d.finalized) {
       trials++;
       if (d.habits[habitId]?.done) successes++;
     }
   });
-
   if (!trials) return 0;
-
   const base = successes / trials;
   const streak = computeStreakOfficial(habitId, refISO);
   const streakBoost = Math.min(streak / 10, 0.3);
-
   let p = base * 0.7 + streakBoost;
   return Math.round(clamp01(p) * 100);
 }
-
-// ---------- AGGREGATE ----------
 
 function getHabitAggregate(habitId) {
   let totalCompletions = 0;
@@ -519,28 +426,22 @@ function getHabitAggregate(habitId) {
   let masteredAt = null;
   let deltaSum = 0;
   let deltaCount = 0;
-
   days.forEach(d => {
     const st = d.habits?.[habitId];
     if (!st) return;
-
     totalCompletions += st.totalCompletions || 0;
     hardCount += st.hardDayCount || 0;
-
     if (st.mastered) {
       mastered = true;
       if (!masteredAt || st.masteredAt < masteredAt) {
         masteredAt = st.masteredAt;
       }
     }
-
     deltaSum += st.readinessDeltaSum || 0;
     deltaCount += st.readinessDeltaCount || 0;
   });
-
   const deltaAvg =
     deltaCount > 0 ? Math.round((deltaSum / deltaCount) * 10) / 10 : 0;
-
   return {
     totalCompletions,
     hardDayCount: hardCount,
@@ -550,58 +451,42 @@ function getHabitAggregate(habitId) {
   };
 }
 
-// ---------- UI: HABIT TILE ----------
-
 function makeHabitTile(h, st, group) {
   const tile = document.createElement("div");
   tile.className = "habit-tile";
-
   if (st.done) tile.classList.add("done");
-
   const streak = computeStreakPreviewToday(h.id);
   if (streak >= 7) tile.classList.add("streak7");
-
   const header = document.createElement("div");
   header.className = "habit-tile-header";
-
   const title = document.createElement("div");
   title.className = "habit-tile-title";
   title.textContent = h.title;
-
   const status = document.createElement("div");
   status.className = "habit-tile-status";
   status.textContent = st.mastered ? "MASTERED" : "";
-
   header.appendChild(title);
   header.appendChild(status);
-
   const body = document.createElement("div");
   body.className = "habit-tile-body";
   body.textContent = h.desc;
-
   const footer = document.createElement("div");
   footer.className = "habit-tile-footer";
-
   const streakEl = document.createElement("div");
   streakEl.textContent = `Streak: ${streak}`;
-
   const mc = computeMonteCarloScore(h.id, todayDay.date);
   const mcEl = document.createElement("div");
   mcEl.textContent = `MC: ${mc}%`;
-
   footer.appendChild(streakEl);
   footer.appendChild(mcEl);
-
   tile.appendChild(header);
   tile.appendChild(body);
   tile.appendChild(footer);
-
-  tile.addEventListener("click", ev => {
+  tile.addEventListener("click", () => {
     const now = Date.now();
-    if (now - lastTapTime < 250) {
+    if (now - lastTapTime < 250 && !todayDay.finalized) {
       st.done = !st.done;
       if (st.done) st.totalCompletions++;
-
       saveDays();
       renderHabitLibrary();
       updateRealtimeHub();
@@ -609,98 +494,76 @@ function makeHabitTile(h, st, group) {
     }
     lastTapTime = now;
   });
-
   return tile;
 }
-
-// ---------- MASTERED SECTION ----------
 
 function renderMasteredSection() {
   const container = document.createElement("div");
   container.className = "habit-row";
-
   const title = document.createElement("div");
   title.className = "habit-row-title";
   title.textContent = "Mastered Collection";
   container.appendChild(title);
-
   const strip = document.createElement("div");
   strip.className = "habit-row-strip";
-
   HABIT_GROUPS.forEach(group => {
     group.habits.forEach(h => {
       const agg = getHabitAggregate(h.id);
       if (!agg.mastered) return;
-
       const tile = document.createElement("div");
       tile.className = "habit-tile streak7";
-
       const header = document.createElement("div");
       header.className = "habit-tile-header";
-
       const nm = document.createElement("div");
       nm.className = "habit-tile-title";
       nm.textContent = h.title;
-
       const badge = document.createElement("div");
       badge.className = "habit-tile-status";
       badge.textContent = "MASTERED";
-
       header.appendChild(nm);
       header.appendChild(badge);
-
       const body = document.createElement("div");
       body.className = "habit-tile-body";
       body.innerHTML =
         `Suorituksia: ${agg.totalCompletions}<br>` +
         `Vaikeita päiviä: ${agg.hardDayCount}<br>` +
         `Readiness delta: ${agg.readinessDeltaAvg}`;
-
       const footer = document.createElement("div");
       footer.className = "habit-tile-footer";
-      footer.innerHTML = `Unlck: ${agg.masteredAt ? agg.masteredAt.slice(5) : "-"}`;
-
+      footer.innerHTML = `Unlck: ${
+        agg.masteredAt ? agg.masteredAt.slice(5) : "-"
+      }`;
       tile.appendChild(header);
       tile.appendChild(body);
       tile.appendChild(footer);
-
       strip.appendChild(tile);
     });
   });
-
   container.appendChild(strip);
   return container;
 }
 
-// ---------- BAD HABITS ----------
-
 function renderBadHabitSection() {
   const container = document.createElement("div");
   container.className = "habit-row";
-
   const title = document.createElement("div");
   title.className = "habit-row-title";
   title.textContent = "Huonot Habitit";
   container.appendChild(title);
-
   const strip = document.createElement("div");
   strip.className = "habit-row-strip";
-
   BAD_HABITS.forEach(b => {
     const st = getBadHabitState(todayDay, b.id);
-
     const tile = document.createElement("div");
     tile.className = "habit-tile";
     if (st.done) tile.classList.add("done");
-
     tile.innerHTML =
       `<div class='habit-tile-header'><div class='habit-tile-title'>${b.title}</div><div class='habit-tile-status'>-${b.penalty}</div></div>` +
       `<div class='habit-tile-body'>Haittakerroin: ${b.penalty}</div>` +
       `<div class='habit-tile-footer'><span></span><span></span></div>`;
-
-    tile.addEventListener("click", ev => {
+    tile.addEventListener("click", () => {
       const now = Date.now();
-      if (now - lastTapTime < 250) {
+      if (now - lastTapTime < 250 && !todayDay.finalized) {
         st.done = !st.done;
         saveDays();
         renderHabitLibrary();
@@ -709,83 +572,45 @@ function renderBadHabitSection() {
       }
       lastTapTime = now;
     });
-
     strip.appendChild(tile);
   });
-
   container.appendChild(strip);
   return container;
 }
 
-// ---------- LIBRARY RENDER ----------
-
 function renderHabitLibrary() {
   if (!todayDay) return;
-
-  const { baseReadiness } = computeReadiness(todayDay);
-
+  const { habitScore, baseReadiness } = computeReadiness(todayDay);
+  computeMomentum(todayDay, habitScore, baseReadiness);
   const headerDate = document.getElementById("libraryDate");
   headerDate.textContent = "Päivä: " + formatFi(todayDay.date);
-
   const sum = computeHabitSummary(todayDay);
   document.getElementById("libraryHabitSummary").textContent =
     `Suoritettu: ${sum.done}/${sum.total}`;
-
   document.getElementById("libraryReadiness").textContent =
     `Readiness: ${todayDay.readiness}%`;
-
   const container = document.getElementById("habitSections");
   container.innerHTML = "";
-
   container.appendChild(renderMasteredSection());
-
   HABIT_GROUPS.forEach(group => {
     const row = document.createElement("div");
     row.className = "habit-row";
-
     const title = document.createElement("div");
     title.className = "habit-row-title";
     title.textContent = group.title;
-
     const strip = document.createElement("div");
     strip.className = "habit-row-strip";
-
     group.habits.forEach(h => {
       const st = getHabitState(todayDay, h.id);
       strip.appendChild(makeHabitTile(h, st, group));
     });
-
     row.appendChild(title);
     row.appendChild(strip);
     container.appendChild(row);
   });
-
   container.appendChild(renderBadHabitSection());
   updateRealtimeHub();
-}
-
-// ---------- REAL TIME HUB ----------
-
-function updateRealtimeHub() {
-  if (!todayDay) return;
-
-  const sum = computeHabitSummary(todayDay);
-  const masteredCount = countMasteredCards();
-
-  let lifetime = 0;
-  HABIT_GROUPS.forEach(g => {
-    g.habits.forEach(h => {
-      lifetime += getHabitAggregate(h.id).totalCompletions;
-    });
-  });
-
-  document.getElementById("hubHeadline").textContent =
-    `Readiness ${todayDay.readiness}% · Momentum ${todayDay.momentum}/100 · Mastered ${masteredCount}`;
-
-  document.getElementById("hubMasteredCount").textContent = masteredCount;
-  document.getElementById("hubTodayHabits").textContent =
-    `${sum.done}/${sum.total}`;
-  document.getElementById("hubLifetime").textContent = lifetime;
+  renderTelemetryPanel();
 }
 
 function countMasteredCards() {
@@ -798,64 +623,117 @@ function countMasteredCards() {
   return count;
 }
 
-// ---------- PIT RADIO ----------
-
-function pitRadioMessage(msg) {
-  document.getElementById("pitMessage").textContent = msg;
+function updateRealtimeHub() {
+  if (!todayDay) return;
+  const sum = computeHabitSummary(todayDay);
+  const masteredCount = countMasteredCards();
+  let lifetime = 0;
+  HABIT_GROUPS.forEach(g => {
+    g.habits.forEach(h => {
+      lifetime += getHabitAggregate(h.id).totalCompletions;
+    });
+  });
+  document.getElementById("hubHeadline").textContent =
+    `Readiness ${todayDay.readiness}% · Momentum ${todayDay.momentum}/100 · Mastered ${masteredCount}`;
+  document.getElementById("hubMasteredCount").textContent = masteredCount;
+  document.getElementById("hubTodayHabits").textContent =
+    `${sum.done}/${sum.total}`;
+  document.getElementById("hubLifetime").textContent = lifetime;
 }
 
-// ---------- SLIDERS ----------
+function pitRadioMessage(msg) {
+  const el = document.getElementById("pitMessage");
+  if (el) el.textContent = msg;
+}
+
+function renderTelemetryPanel() {
+  if (!todayDay) return;
+  const { habitScore, baseReadiness } = computeReadiness(todayDay);
+  computeMomentum(todayDay, habitScore, baseReadiness);
+  const sum = computeHabitSummary(todayDay);
+  const dateLabel = document.getElementById("todayDateLabel");
+  const readinessValue = document.getElementById("readinessValue");
+  const dayModeTag = document.getElementById("dayModeTag");
+  const hardDayTag = document.getElementById("hardDayTag");
+  const habitSummaryTag = document.getElementById("habitSummaryTag");
+  dateLabel.textContent =
+    "Päivä: " + formatFi(todayDay.date) + (todayDay.finalized ? " · LUKITTU" : "");
+  readinessValue.textContent = `${todayDay.readiness}%`;
+  dayModeTag.textContent = `Mode: ${todayDay.dayType}`;
+  hardDayTag.textContent = todayDay.hardDay ? "Hard day" : "Normipäivä";
+  habitSummaryTag.textContent =
+    `Habit: ${sum.done}/${sum.total} · Momentum ${todayDay.momentum}`;
+  const diffLabel = document.getElementById("difficultyLabel");
+  const energyLabel = document.getElementById("energyLabel");
+  const stressLabel = document.getElementById("stressLabel");
+  const moodLabel = document.getElementById("moodLabel");
+  const motivationLabel = document.getElementById("motivationLabel");
+  diffLabel.textContent = `${todayDay.difficulty}/10`;
+  energyLabel.textContent = `${todayDay.energy}/10`;
+  stressLabel.textContent = `${todayDay.stress}/10`;
+  moodLabel.textContent = `${todayDay.mood}/10`;
+  motivationLabel.textContent = `${todayDay.motivation}/10`;
+  document.querySelector("input[data-field='difficulty']").value =
+    todayDay.difficulty;
+  document.querySelector("input[data-field='energy']").value =
+    todayDay.energy;
+  document.querySelector("input[data-field='stress']").value =
+    todayDay.stress;
+  document.querySelector("input[data-field='mood']").value =
+    todayDay.mood;
+  document.querySelector("input[data-field='motivation']").value =
+    todayDay.motivation;
+  document.querySelector("select[data-field='dayType']").value =
+    todayDay.dayType;
+  document.querySelector("select[data-field='sleep']").value =
+    todayDay.sleep;
+  const notes = document.getElementById("notes");
+  notes.value = todayDay.notes || "";
+  const stintSummary = document.getElementById("stintSummary");
+  const pitPlan = document.getElementById("pitPlan");
+  stintSummary.textContent = todayDay.strategy || "";
+  pitPlan.textContent = todayDay.pitPlan || "";
+}
 
 function bindSliders() {
   document.querySelectorAll("input[type=range]").forEach(r => {
     r.addEventListener("input", () => {
+      if (todayDay.finalized) return;
       const field = r.getAttribute("data-field");
       const label = document.getElementById(field + "Label");
-
       todayDay[field] = Number(r.value);
       if (label) label.textContent = `${r.value}/10`;
-
       saveDays();
-      computeReadiness(todayDay);
       renderHabitLibrary();
-      pitRadioMessage(field + " päivitetty.");
     });
   });
-
   document.querySelectorAll("select[data-field]").forEach(sel => {
     sel.addEventListener("change", () => {
+      if (todayDay.finalized) return;
       const field = sel.getAttribute("data-field");
       todayDay[field] = sel.value;
-
       saveDays();
       renderHabitLibrary();
     });
   });
-
   const notes = document.getElementById("notes");
   notes.addEventListener("input", () => {
+    if (todayDay.finalized) return;
     todayDay.notes = notes.value;
     saveDays();
   });
 }
 
-// ---------- FINALIZE DAY ----------
-
 function finalizeToday() {
-  if (!todayDay) return;
-
-  pitRadioMessage("Päivä lukittu.");
-
+  if (!todayDay || todayDay.finalized) return;
   const base = computeBaseReadinessNoHabits(todayDay);
   const delta = todayDay.readiness - base;
-
   if (todayDay.hardDay) {
     forEachHabit(h => {
       const st = getHabitState(todayDay, h.id);
       if (st.done) st.hardDayCount++;
     });
   }
-
   forEachHabit(h => {
     const st = getHabitState(todayDay, h.id);
     if (st.done) {
@@ -863,7 +741,6 @@ function finalizeToday() {
       st.readinessDeltaCount++;
     }
   });
-
   forEachHabit(h => {
     const streak = computeStreakOfficial(h.id, todayDay.date);
     if (streak >= 7) {
@@ -874,53 +751,44 @@ function finalizeToday() {
       }
     }
   });
-
   todayDay.finalized = true;
-
   saveDays();
   renderHabitLibrary();
   renderHistory();
   updateRealtimeHub();
+  pitRadioMessage("Päivä lukittu.");
 }
-
-// ---------- HISTORY ----------
 
 function renderHistory() {
   const list = document.getElementById("historyList");
   if (!list) return;
-
   const sorted = [...days].sort((a, b) => (a.date < b.date ? 1 : -1));
   list.innerHTML = "";
-
   sorted.forEach(d => {
     const item = document.createElement("div");
     item.className = "history-item";
-
     const dt = document.createElement("div");
     dt.className = "history-item-date";
     dt.textContent = formatFi(d.date);
-
     const tag = document.createElement("div");
     tag.className = "history-item-tag";
     tag.textContent = `Ready ${d.readiness}% · Mom ${d.momentum}`;
-
     item.appendChild(dt);
     item.appendChild(tag);
-
     item.addEventListener("click", () => {
-      document.querySelectorAll(".history-item")
-        .forEach(i => i.classList.remove("selected"));
+      document.querySelectorAll(".history-item").forEach(i =>
+        i.classList.remove("selected")
+      );
       item.classList.add("selected");
-
-      document.getElementById("historyDetail")
-        .textContent = JSON.stringify(d, null, 2);
+      document.getElementById("historyDetail").textContent = JSON.stringify(
+        d,
+        null,
+        2
+      );
     });
-
     list.appendChild(item);
   });
 }
-
-// ---------- EXPORT ----------
 
 function bindExport() {
   const btn = document.getElementById("exportBtn");
@@ -929,37 +797,31 @@ function bindExport() {
       type: "application/json"
     });
     const url = URL.createObjectURL(blob);
-
     const a = document.createElement("a");
     a.href = url;
     a.download = "FI_VARIKKO_DATA.json";
     a.click();
-
-    pitRadioMessage("Export valmis.");
   });
 }
-
-// ---------- NAV ----------
 
 function bindNavigation() {
   document.querySelectorAll(".nav-btn").forEach(btn => {
     btn.addEventListener("click", () => {
-      document.querySelectorAll(".nav-btn")
+      document
+        .querySelectorAll(".nav-btn")
         .forEach(b => b.classList.remove("active"));
       btn.classList.add("active");
-
       const view = btn.getAttribute("data-view");
-      document.querySelectorAll(".view")
-        .forEach(v => v.classList.remove("active"));
-
+      document.querySelectorAll(".view").forEach(v =>
+        v.classList.remove("active")
+      );
       if (view) {
         document.getElementById("view-" + view).classList.add("active");
+        if (view === "telemetry") renderTelemetryPanel();
       }
     });
   });
 }
-
-// ---------- INIT ----------
 
 function init() {
   days = loadDays();
@@ -967,14 +829,12 @@ function init() {
   bindSliders();
   bindExport();
   bindNavigation();
+  const finalizeBtn = document.getElementById("finalizeBtn");
+  finalizeBtn.addEventListener("click", finalizeToday);
   renderHabitLibrary();
   renderHistory();
   updateRealtimeHub();
-  pitRadioMessage("FI Varikko käynnistetty. Telemetria valmis.");
+  pitRadioMessage("FI Varikko käynnistetty.");
 }
 
 window.addEventListener("load", init);
-
-// ================================================================
-// LOPPU — Täysi app.js valmis.
-// ================================================================
