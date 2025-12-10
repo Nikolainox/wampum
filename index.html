@@ -6,32 +6,26 @@
   <title>FI VARIKKO · Elite Habit Telemetry</title>
   <link rel="stylesheet" href="style.css" />
 </head>
-
 <body>
 
-  <!-- TOP NAVIGATION -->
   <div id="topNav">
     <button class="nav-btn active" data-view="library">Habit Library</button>
     <button class="nav-btn" data-view="telemetry">Telemetry</button>
     <button id="exportBtn" class="nav-btn small">Export</button>
   </div>
 
-  <!-- REAL-TIME HUB -->
   <div id="hub">
     <div id="hubHeadline">Readiness 0% · Momentum 0/100 · Mastered 0</div>
-    <div id="hubSubline">Tieto päivittyy reaaliajassa.</div>
-
+    <div id="hubSubline">Telemetria latautuu…</div>
     <div id="hubStats">
       <div class="hubBox">
         <label>Mastered</label>
         <div id="hubMasteredCount">0</div>
       </div>
-
       <div class="hubBox">
         <label>Tänään</label>
         <div id="hubTodayHabits">0/0</div>
       </div>
-
       <div class="hubBox">
         <label>Lifetime</label>
         <div id="hubLifetime">0</div>
@@ -39,36 +33,28 @@
     </div>
   </div>
 
-  <!-- PIT RADIO / AI -->
   <div id="pitRadio">
     <div id="pitStatus">VARIKKO: READY</div>
-    <div id="pitMessage">Päivätelemetria latautuu…</div>
+    <div id="pitMessage">Aloita päivä valitsemalla kortteja illalla.</div>
   </div>
 
-  <!-- VIEW 1: HABIT LIBRARY -->
   <div id="view-library" class="view active">
     <div id="libraryHeader">
       <div id="libraryDate">Päivä:</div>
       <div id="libraryHabitSummary"></div>
       <div id="libraryReadiness"></div>
     </div>
-
     <div id="habitSections"></div>
   </div>
 
-
-  <!-- VIEW 2: TELEMETRY -->
   <div id="view-telemetry" class="view">
     <div id="telemetryPanel">
-
       <h2 id="todayDateLabel">Päivä</h2>
       <p><strong>Readiness:</strong> <span id="readinessValue">0%</span></p>
-
       <p id="dayModeTag"></p>
       <p id="hardDayTag"></p>
       <p id="habitSummaryTag"></p>
 
-      <!-- SLIDERS -->
       <div class="sliderBlock">
         <label>Vaikeus</label>
         <input type="range" min="1" max="10" value="5" data-field="difficulty" />
@@ -131,13 +117,11 @@
 
       <button id="finalizeBtn" class="finalize">Lukitse päivä</button>
 
-      <!-- HISTORY -->
       <h2>Historia</h2>
       <div id="history">
         <div id="historyList"></div>
         <div id="historyDetail"></div>
       </div>
-
     </div>
   </div>
 
