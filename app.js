@@ -1,61 +1,199 @@
-// FI VARIKKO ENGINE + HABIT REELS
+// ================================================================
+// FI VARIKKO — ELITE HABIT TELEMETRY
+// Täysi app.js yhdessä tiedostossa
+// ================================================================
 
-const STORAGE_KEY = "fi_varikko_days_v2";
+// STORAGE KEY
+const STORAGE_KEY = "fi_varikko_library_elite_v2";
 
-// Habit-konfiguraatio
-const HABITS = [
+// ---------- HABIT-KIRJASTO (99 hyvää habitia) ----------
+
+const HABIT_GROUPS = [
   {
-    id: "wake",
-    title: "Herääminen järkevään aikaan",
-    desc: "Heräsit suunnilleen suunniteltuun aikaan ilman loputonta torkutusta.",
-    weight: 1.2,
+    id: "mind",
+    title: "Mind & Focus",
+    directionWeight: 1.3,
+    habits: [
+      { id: "mind_breath_3", title: "Hengitys 3 min", desc: "Lyhyt hengitysharjoitus." },
+      { id: "mind_breath_10", title: "Hengitys 10 min", desc: "Syvempi hengityssessio." },
+      { id: "mind_focus_1", title: "Fokus-stintti 20 min", desc: "Keskeytyksetön työblokki." },
+      { id: "mind_focus_2", title: "Fokus-stintti 40 min", desc: "Syvä keskittyminen." },
+      { id: "mind_medit_5", title: "Meditaatio 5 min", desc: "Nopea mielen nollaus." },
+      { id: "mind_medit_15", title: "Meditaatio 15 min", desc: "Pidempi rauhoittuminen." },
+      { id: "mind_journal_3", title: "3 riviä journalia", desc: "Kirjoitit ajatuksia ylös." },
+      { id: "mind_journal_dump", title: "Brain dump", desc: "Tyhjensit pään paperille." },
+      { id: "mind_no_morning_scroll", title: "Ei aamusomea", desc: "Aamu ilman scrolleja." },
+      { id: "mind_evening_reflect", title: "Illan reflektio", desc: "Lyhyt päivän arvio." },
+      { id: "mind_read_5", title: "Lukeminen 5 min", desc: "Kirja tai artikkeli." },
+      { id: "mind_read_20", title: "Lukeminen 20 min", desc: "Syvempi oppiminen." },
+      { id: "mind_gratitude_3", title: "3 kiitollisuutta", desc: "Mistä olit kiitollinen." },
+      { id: "mind_stress_release", title: "Stressin purku", desc: "Kirjoitit tai puhuit ulos." },
+      { id: "mind_visualize", title: "Visualisaatio", desc: "Mielikuva halutusta tulevaisuudesta." },
+      { id: "mind_silence", title: "Hiljainen hetki", desc: "5 min ilman ärsykkeitä." },
+      { id: "mind_top_task_touch", title: "Tärkein tehtävä aloitettu", desc: "Kosketit tärkeintä asiaa." },
+      { id: "mind_planning_10", title: "10 min suunnittelu", desc: "Päivän suunnittelu." },
+      { id: "mind_problem_solve", title: "Ongelman ratkaisu", desc: "Työstät yhtä haastetta." },
+      { id: "mind_learning_note", title: "Oppimismuistiinpano", desc: "Kirjoitit mitä opit." }
+    ]
   },
+
   {
-    id: "move",
-    title: "Liike / treeni",
-    desc: "Teit jotain fyysistä: kävely, treeni, venyttely tai edes 10 minuutin liike.",
-    weight: 1.4,
+    id: "body",
+    title: "Body & Performance",
+    directionWeight: 1.3,
+    habits: [
+      { id: "body_walk_10", title: "Kävely 10 min", desc: "Kevyt liike." },
+      { id: "body_walk_30", title: "Kävely 30 min", desc: "Pidempi lenkki." },
+      { id: "body_mobility_5", title: "Mobility 5 min", desc: "Lyhyt liikkuvuussetti." },
+      { id: "body_mobility_15", title: "Mobility 15 min", desc: "Koko kehon avaus." },
+      { id: "body_sweat", title: "Hikoilu", desc: "Fyysinen rasitus." },
+      { id: "body_strength", title: "Voimatreeni", desc: "Painot tai kehonpaino." },
+      { id: "body_activation", title: "Aamun aktivointi", desc: "Kehon käynnistys." },
+      { id: "body_cold_shower", title: "Cold shower", desc: "Kylmäaltistus." },
+      { id: "body_sauna", title: "Sauna", desc: "Palauttava lämpö." },
+      { id: "body_water", title: "Vesi & elektrolyytit", desc: "Nesteytys." },
+      { id: "body_protein", title: "Proteiiniannos", desc: "Riittävä proteiini." },
+      { id: "body_meal_quality", title: "Fiksu ateria", desc: "Hyvä ravinto." },
+      { id: "body_sleep_7", title: "Uni 7h+", desc: "Riittävä lepo." },
+      { id: "body_sleep_consistent", title: "Unirytmi", desc: "Sama nukkumaanmeno." },
+      { id: "body_winddown", title: "Iltarutiini", desc: "Rauhoittava ilta." },
+      { id: "body_posture_reset", title: "Ryhtireset", desc: "Korjasit asentoa." },
+      { id: "body_micro_breaks", title: "Mikrotauot", desc: "Tauot istumisesta." },
+      { id: "body_sunlight", title: "Päivänvalo", desc: "Ulkoilu/aurinko." },
+      { id: "body_heart_rate_down", title: "Syke alas", desc: "Hengityksellä tai levolla." },
+      { id: "body_recovery_block", title: "Palautumisblokki", desc: "Jotain keholle palauttavaa." }
+    ]
   },
+
   {
-    id: "focus",
-    title: "Yksi fokus-stintti",
-    desc: "Yksi 20–30 min keskittynyt jakso ilman some-scrollia.",
-    weight: 1.5,
+    id: "discipline",
+    title: "Discipline & Identity",
+    directionWeight: 1.3,
+    habits: [
+      { id: "disc_keep_promise", title: "Pidit lupauksen", desc: "Itsellesi tai muille." },
+      { id: "disc_do_hard", title: "Valitsit vaikeamman", desc: "Teit vaikean asian." },
+      { id: "disc_no_alc", title: "Ei alkoholia", desc: "Päivä ilman alkoholia." },
+      { id: "disc_no_morning_scroll", title: "Ei aamusomea", desc: "Aamu ilman ruutua." },
+      { id: "disc_skip_bad", title: "Skippasit huonon tavan", desc: "Jätit jotain haitallista tekemättä." },
+      { id: "disc_clean_3", title: "Siivoaminen 3 min", desc: "Pieni järjestysliike." },
+      { id: "disc_single_task", title: "Single-tasking", desc: "Teit yhden asian loppuun." },
+      { id: "disc_no_drama", title: "Ei draamaa", desc: "Et lähtenyt mukaan." },
+      { id: "disc_future_self", title: "Tulevan itsen teko", desc: "Teit jotain pitkälle tulevaisuudelle." },
+      { id: "disc_tiny_win", title: "Pieni voitto", desc: "Teit vähän epämukavaa." },
+      { id: "disc_show_up", title: "Ilmestyit paikalle", desc: "Menit vaikka ei huvittanut." },
+      { id: "disc_consistent_time", title: "Sama aloitusaika", desc: "Rutiinin aloitus samaan aikaan." },
+      { id: "disc_delay_dopamine", title: "Dopamiinin viivästys", desc: "Siirsit palkintoa." },
+      { id: "disc_boundaries", title: "Rajat", desc: "Sanoit ei, kun piti." },
+      { id: "disc_no_excuses", title: "Ei tekosyitä", desc: "Et syyttänyt olosuhteita." },
+      { id: "disc_micro_commit", title: "1 min commit", desc: "Aloitit minuutilla." },
+      { id: "disc_finishing", title: "Valmistelu", desc: "Teit loppuun asti." },
+      { id: "disc_habit_chain", title: "Habit chain", desc: "Useampi hyvä tapa putkeen." },
+      { id: "disc_identity_move", title: "Identity move", desc: "Toimit kuten vahvempi versiosi." },
+      { id: "disc_no_quit", title: "Ei luovutusta", desc: "Et lopettanut kesken." }
+    ]
   },
+
   {
-    id: "fuel",
-    title: "Hyvä fuel",
-    desc: "Et vetänyt pelkkää roskaa; perus ravinto oli kasassa.",
-    weight: 1.1,
+    id: "purpose",
+    title: "Purpose & Long Game",
+    directionWeight: 1.2,
+    habits: [
+      { id: "pur_project_10", title: "Projektityö 10 min", desc: "Pieni eteneminen." },
+      { id: "pur_project_30", title: "Projektityö 30 min", desc: "Syvempi askel." },
+      { id: "pur_read_goal", title: "Tavoitelukeminen", desc: "Luit tärkeää asiaa." },
+      { id: "pur_network", title: "Yhteys ihmiseen", desc: "Yksi kontakti." },
+      { id: "pur_money_move", title: "Rahat liikkeessä", desc: "Pieni raha-askel." },
+      { id: "pur_vision_view", title: "Vision katsominen", desc: "Näin suuntani." },
+      { id: "pur_weekly_direction", title: "Viikkosuunta", desc: "Päivitit suuntaa." },
+      { id: "pur_deep_work", title: "Deep work", desc: "Syvä työblokki." },
+      { id: "pur_skill_practice", title: "Taitoharjoittelu", desc: "Hieman joka päivä." },
+      { id: "pur_long_term_yes", title: "Pitkän pelin kyllä", desc: "Yksi iso valinta." },
+      { id: "pur_long_term_no", title: "Pitkän pelin ei", desc: "Kieltäydyit." },
+      { id: "pur_side_project", title: "Sivuprojekti", desc: "Liikuit projektia." },
+      { id: "pur_refine_plan", title: "Suunnitelman hienosäätö", desc: "Paransit suuntaa." },
+      { id: "pur_output", title: "Tuotos", desc: "Tuotit sisältöä." },
+      { id: "pur_teach", title: "Opetit jotakin", desc: "Jaot osaamista." },
+      { id: "pur_legacy", title: "Legacy move", desc: "Teko josta olet ylpeä." },
+      { id: "pur_value_add", title: "Arvon luonti", desc: "Loit arvoa päivän aikana." },
+      { id: "pur_journal_future", title: "Tulevan itsen kirje", desc: "Kirjoitit itselle tulevaisuuteen." },
+      { id: "pur_tomorrow_plan", title: "Huomisen suunnitelma", desc: "Valmistelit huomisen." },
+      { id: "pur_course_progress", title: "Kurssin eteneminen", desc: "Pieni askel opiskelussa." }
+    ]
   },
+
   {
-    id: "off",
-    title: "Off-screen hetki",
-    desc: "Vähintään 10–15 min ilman ruutua – hengitys, rauhoittuminen, ulkoilu.",
-    weight: 1.3,
-  },
-  {
-    id: "hard",
-    title: "Vaikean asian aloitus",
-    desc: "Aloitit edes 5 minuutiksi asian, jota olisit mieluummin vältellyt.",
-    weight: 1.6,
-  },
+    id: "recovery",
+    title: "Recovery & Emotion",
+    directionWeight: 1.4,
+    habits: [
+      { id: "rec_walk_calm", title: "Rauhallinen kävely", desc: "Palauttava liike." },
+      { id: "rec_stretch", title: "Kevyt venyttely", desc: "Rentoutus." },
+      { id: "rec_music", title: "Rauhoittava musiikki", desc: "Hetki rauhaa." },
+      { id: "rec_breath_box", title: "Box breathing", desc: "4-4-4-4 hengitys." },
+      { id: "rec_nap", title: "Power nap", desc: "5–20 min lepo." },
+      { id: "rec_social_safe", title: "Turvallinen juttelu", desc: "Tunteiden jakaminen." },
+      { id: "rec_cry", title: "Tunteen purku", desc: "Päästit läpi tunteen." },
+      { id: "rec_no_caffeine_pm", title: "Ei kofeiinia iltapäivällä", desc: "Uni kiittää." },
+      { id: "rec_no_screen_evening", title: "Ei ruutua illalla", desc: "Paras unirytmi." },
+      { id: "rec_hot_cold", title: "Lämpö/kylmä", desc: "Sauna + kylmä." },
+      { id: "rec_bath", title: "Lämmin suihku/kylpy", desc: "Palauttava hetki." },
+      { id: "rec_gratitude_person", title: "Kiitollisuus ihmisestä", desc: "Tiedostit hyvän." },
+      { id: "rec_nature", title: "Luontokontakti", desc: "Hetki ulkona." },
+      { id: "rec_slow_morning", title: "Hidas aamu", desc: "Lempi-startti." },
+      { id: "rec_slow_evening", title: "Hidas ilta", desc: "Rauha ennen unta." },
+      { id: "rec_joy_moment", title: "Pieni ilo", desc: "Pieni mutta merkittävä kokemus." },
+      { id: "rec_body_scan", title: "Body scan", desc: "Kehon läpikäynti." },
+      { id: "rec_zero_input", title: "Zero-input", desc: "Ei podcasteja/videoita." },
+      { id: "rec_compassion", title: "Myötätunto", desc: "Puhuit lempeästi itselle." }
+    ]
+  }
 ];
+
+// ---------- HUONOT HABITIT (25 kpl) ----------
+
+const BAD_HABITS = [
+  { id: "bad_morning_phone", title: "Puhelin heti herätessä", penalty: 2 },
+  { id: "bad_morning_scroll", title: "Aamuscrolli yli 20 min", penalty: 2 },
+  { id: "bad_doomscroll", title: "Doomscroll 45+ min", penalty: 3 },
+  { id: "bad_late_caffeine", title: "Kofeiini myöhään", penalty: 2 },
+  { id: "bad_sugar_spike", title: "Sokeripiikki", penalty: 2 },
+  { id: "bad_junk_food", title: "Roskajunkki", penalty: 2 },
+  { id: "bad_sleep_late", title: "Valvoit liian myöhään", penalty: 3 },
+  { id: "bad_no_sleep_rhythm", title: "Ei uniritmiä", penalty: 2 },
+  { id: "bad_zero_movement", title: "Ei liikettä tänään", penalty: 2 },
+  { id: "bad_posture_all_day", title: "Huono ryhti koko päivän", penalty: 2 },
+  { id: "bad_stress_no_release", title: "Et purkanut stressiä", penalty: 2 },
+  { id: "bad_drama", title: "Turha draama", penalty: 3 },
+  { id: "bad_multitask", title: "Multitaskaus tärkeässä", penalty: 2 },
+  { id: "bad_procrastination", title: "Viivyttely tärkeässä", penalty: 3 },
+  { id: "bad_overcommit", title: "Liikaa lupauksia", penalty: 2 },
+  { id: "bad_social_overload", title: "Liikaa somea", penalty: 2 },
+  { id: "bad_env_clutter", title: "Täysi kaaos ympäristössä", penalty: 2 },
+  { id: "bad_negative_selftalk", title: "Negatiivinen itsepuhe", penalty: 3 },
+  { id: "bad_zero_boundaries", title: "Ei rajoja", penalty: 2 },
+  { id: "bad_skip_meal", title: "Unohdit syödä", penalty: 2 },
+  { id: "bad_binge_video", title: "Binge-videoilua", penalty: 2 },
+  { id: "bad_alcohol", title: "Alkoholi yli suunnitelman", penalty: 3 },
+  { id: "bad_overwork", title: "Yli 12h työpäivä", penalty: 2 },
+  { id: "bad_zero_reflection", title: "Ei reflektiota", penalty: 1 },
+  { id: "bad_emotional_avoid", title: "Tunteen pakoilu", penalty: 2 }
+];
+
+// ---------- PERUSTILAT ----------
 
 let days = [];
 let todayDay = null;
-let recomputeTimer = null;
+let lastTapTime = 0;
 
-let currentHabitIndex = 0;
-let lastHabitTapTime = 0;
+function forEachHabit(callback) {
+  HABIT_GROUPS.forEach(group => {
+    group.habits.forEach(h => callback(h, group));
+  });
+}
 
-// ---- UTIL ----
 function getTodayISO() {
   const d = new Date();
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, "0");
-  const day = String(d.getDate()).padStart(2, "0");
-  return `${y}-${m}-${day}`;
+  return d.toISOString().slice(0, 10);
 }
 
 function formatFi(iso) {
@@ -69,12 +207,15 @@ function setStatus(msg) {
 }
 
 function clamp01(v) {
-  if (v < 0) return 0;
-  if (v > 1) return 1;
-  return v;
+  return Math.min(1, Math.max(0, v));
 }
 
-// ---- STORAGE ----
+function getDayByISO(iso) {
+  return days.find(d => d.date === iso) || null;
+}
+
+// ---------- STORAGE ----------
+
 function loadDays() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
@@ -82,8 +223,6 @@ function loadDays() {
     const parsed = JSON.parse(raw);
     return Array.isArray(parsed) ? parsed : [];
   } catch (e) {
-    console.error(e);
-    setStatus("LocalStorage ei käytettävissä, data vain tältä istunnolta.");
     return [];
   }
 }
@@ -91,718 +230,751 @@ function loadDays() {
 function saveDays() {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(days));
-    setStatus("Tallennettu.");
   } catch (e) {
-    console.error(e);
-    setStatus("Tallennus epäonnistui.");
+    console.error("save fail", e);
   }
 }
 
-function defaultDay(dateISO) {
-  const habitsState = {};
-  HABITS.forEach((h) => {
-    habitsState[h.id] = { done: false, perfect: false };
-  });
+// ---------- DAY CREATION ----------
 
+function createEmptyHabitsState() {
+  const habits = {};
+  forEachHabit(h => {
+    habits[h.id] = {
+      done: false,
+      totalCompletions: 0,
+      mastered: false,
+      masteredAt: null,
+      readinessDeltaSum: 0,
+      readinessDeltaCount: 0,
+      hardDayCount: 0
+    };
+  });
+  return habits;
+}
+
+function createEmptyBadHabitsState() {
+  const st = {};
+  BAD_HABITS.forEach(b => {
+    st[b.id] = { done: false };
+  });
+  return st;
+}
+
+function defaultDay(dateISO) {
   return {
     id: "day_" + dateISO,
     date: dateISO,
+
     dayType: "race",
     difficulty: 5,
     energy: 5,
-    focus: 5,
-    bodyLoad: 5,
     stress: 5,
     mood: 5,
     sleep: "ok",
     motivation: 5,
-    confidence: 5,
-    goal: "progress",
+
     readiness: 50,
+    momentum: 0,
     hardDay: false,
+
+    habits: createEmptyHabitsState(),
+    badHabits: createEmptyBadHabitsState(),
+
+    notes: "",
     strategy: "",
     pitPlan: "",
-    notes: "",
-    habits: habitsState,
+
     finalized: false,
-    createdAt: new Date().toISOString(),
+    createdAt: new Date().toISOString()
   };
 }
 
 function ensureToday() {
   const todayISO = getTodayISO();
-  let d = days.find((x) => x.date === todayISO);
+  let d = days.find(x => x.date === todayISO);
+
   if (!d) {
     d = defaultDay(todayISO);
     days.push(d);
-    saveDays();
-  } else {
-    // varmista että kaikki habitit on olemassa myös vanhoissa korteissa
-    if (!d.habits || typeof d.habits !== "object") {
-      d.habits = {};
-    }
-    HABITS.forEach((h) => {
-      if (!d.habits[h.id]) {
-        d.habits[h.id] = { done: false, perfect: false };
-      }
-    });
   }
+
   todayDay = d;
+  saveDays();
 }
 
-// ---- HABIT LOGIIKKA ----
-function getHabitStateForDay(day, habitId) {
-  if (!day.habits || typeof day.habits !== "object") {
-    day.habits = {};
-  }
+// ---------- HABIT STATE ----------
+
+function getHabitState(day, habitId) {
   if (!day.habits[habitId]) {
-    day.habits[habitId] = { done: false, perfect: false };
+    day.habits[habitId] = {
+      done: false,
+      totalCompletions: 0,
+      mastered: false,
+      masteredAt: null,
+      readinessDeltaSum: 0,
+      readinessDeltaCount: 0,
+      hardDayCount: 0
+    };
   }
   return day.habits[habitId];
 }
 
-function computeHabitConsistency(habitId) {
-  if (!days.length) {
-    return { percent: 0, doneCount: 0, totalDays: 0 };
+function getBadHabitState(day, badId) {
+  if (!day.badHabits[badId]) {
+    day.badHabits[badId] = { done: false };
   }
-  let doneCount = 0;
-  let total = 0;
-  days.forEach((d) => {
-    if (!d.habits) return;
-    const st = d.habits[habitId];
-    if (!st) return;
-    total += 1;
-    if (st.done) doneCount += 1;
-  });
-  if (!total) return { percent: 0, doneCount: 0, totalDays: 0 };
-  const percent = Math.round((doneCount / total) * 100);
-  return { percent, doneCount, totalDays: total };
+  return day.badHabits[badId];
 }
 
-function computeHabitScoreForDay(day) {
-  if (!day.habits) return 0;
-  let doneCount = 0;
-  let perfectBonus = 0;
-  HABITS.forEach((h) => {
-    const st = day.habits[h.id];
-    if (!st) return;
-    if (st.done) {
-      doneCount += 1;
-      if (st.perfect) perfectBonus += 0.5;
+// ---------- STREAK ----------
+
+function computeStreakOfficial(habitId, refISO) {
+  let streak = 0;
+  const date = new Date(refISO);
+
+  function iso(d) {
+    return d.toISOString().slice(0, 10);
+  }
+
+  while (true) {
+    const curISO = iso(date);
+    const day = getDayByISO(curISO);
+    if (!day || !day.finalized) break;
+
+    if (!day.habits[habitId]?.done) break;
+
+    streak++;
+    date.setDate(date.getDate() - 1);
+  }
+
+  return streak;
+}
+
+function computeStreakPreviewToday(habitId) {
+  if (!todayDay) return 0;
+  const official = computeStreakOfficial(habitId, todayDay.date);
+  if (todayDay.finalized) return official;
+
+  const st = getHabitState(todayDay, habitId);
+  return st.done ? official + 1 : official;
+}
+
+// ---------- SUMMARIES ----------
+
+function computeHabitSummary(day) {
+  let done = 0;
+  let total = 0;
+  forEachHabit(h => {
+    total++;
+    if (day.habits[h.id].done) done++;
+  });
+  return { done, total };
+}
+
+function computeBadHabitsToday(day) {
+  let penalty = 0;
+  let count = 0;
+
+  BAD_HABITS.forEach(b => {
+    if (day.badHabits[b.id].done) {
+      count++;
+      penalty += b.penalty;
     }
   });
-  if (HABITS.length === 0) return 0;
-  const raw = (doneCount + perfectBonus) / (HABITS.length * 1.5); // ~0..1
-  return clamp01(raw);
+
+  return { count, penalty };
 }
 
-// ---- ENGINE: READINESS & STRATEGY ----
-function computeReadiness(day) {
-  // Positiiviset signaalit
-  const posAvg =
-    (day.energy + day.focus + day.motivation + day.confidence) / (4 * 10);
+// ---------- READINESS & MOMENTUM ----------
 
-  // Stressi & vaikeus penaltiot
-  const stressPenalty = (day.stress - 5) / 20; // -0.25..+0.25
-  const difficultyPenalty = (day.difficulty - 5) / 22; // -0.22..+0.22
+function computeBaseReadinessNoHabits(day) {
+  const base = (day.energy + (11 - day.stress) + day.mood + day.motivation) / 40;
 
   let sleepBonus = 0;
   if (day.sleep === "good") sleepBonus = 0.08;
   else if (day.sleep === "bad") sleepBonus = -0.12;
 
-  const bodyPenalty = (day.bodyLoad - 5) / 22;
+  const diffPenalty = (day.difficulty - 5) / 25;
 
-  // Habit-bonus
-  const habitScore = computeHabitScoreForDay(day); // 0..1
-  const habitBonus = habitScore * 0.08; // max +8%
+  let val = base + sleepBonus - diffPenalty;
+  return Math.round(clamp01(val) * 100);
+}
 
-  let readiness =
-    posAvg + sleepBonus - stressPenalty - difficultyPenalty - bodyPenalty + habitBonus;
-  readiness = clamp01(readiness);
-  day.readiness = Math.round(readiness * 100);
+function computeHabitScore(day) {
+  const { done, total } = computeHabitSummary(day);
+  return total ? done / total : 0;
+}
 
-  // Hard day -logiikka
-  const isHard =
+function computeReadiness(day) {
+  const base = computeBaseReadinessNoHabits(day);
+  const habitScore = computeHabitScore(day);
+
+  const bonus = habitScore * 15;
+  let r = clamp01((base + bonus) / 100) * 100;
+
+  day.readiness = Math.round(r);
+
+  day.hardDay =
     day.difficulty >= 7 ||
     (day.energy <= 4 && day.stress >= 7) ||
     (day.sleep === "bad" && day.stress >= 6);
-  day.hardDay = !!isHard;
 
-  const { strategy, pitPlan } = buildStrategy(day, habitScore);
-  day.strategy = strategy;
-  day.pitPlan = pitPlan;
+  return { habitScore, baseReadiness: base };
 }
 
-function buildStrategy(day, habitScore) {
-  const r = day.readiness;
-  const hard = day.hardDay;
-  const lines = [];
-  const pit = [];
+// ---------- 30D FREQUENCY ----------
 
-  if (hard) {
-    lines.push("Tämä on HARD DAY -tila. Tavoite: ehjänä maaliin + yksi pieni voitto.");
-  } else if (day.goal === "push" && r >= 70) {
-    lines.push("Auto on kilpailukykyinen. PB-päivä on realistinen mieli–keho -pakettiin.");
-  } else if (day.goal === "progress") {
-    lines.push("Fokus: pieni, selkeä kehitys yhdellä alueella – ei täydellisyyttä.");
-  } else {
-    lines.push("Fokus: pidä auto radalla ilman isoja virheitä.");
-  }
+function computeHabit30dFrequency(habitId, refISO) {
+  const sorted = [...days].sort((a, b) => (a.date < b.date ? -1 : 1));
+  const idx = sorted.findIndex(x => x.date === refISO);
+  if (idx === -1) return 0;
 
-  const habitPct = Math.round(habitScore * 100);
-  if (habitPct >= 66) {
-    lines.push(
-      `Habit-stack on vahva (${habitPct} %). Päivän suoritus rakentuu jo rutiinin päälle – älä riko ketjua.`
-    );
-  } else if (habitPct >= 33) {
-    lines.push(
-      `Habitteja on jo alussa (${habitPct} %). Lisää yksi habit tänään, älä yritä täydellistä pakettia.`
-    );
-  } else {
-    lines.push(
-      `Habitstack on vielä matala (${habitPct} %). Yksi tehty habit vaikeana päivänä on arvokkaampi kuin viisi helppona.`
-    );
-  }
+  const last30 = sorted.slice(Math.max(0, idx - 30), idx);
+  if (!last30.length) return 0;
 
-  if (hard) {
-    lines.push("Stint-suositus: 2–3 lyhyttä jaksoa, ei kokopäivän täyskaasua.");
-    pit.push("2 x 20–25 min keskittynyt työ (ei somea). ");
-    pit.push("1 x 10–15 min kevyt, palauttava stintti (kävely, venyttely, hengitys). ");
-    pit.push("Kulta sääntö: 1) lyhyet stintit 2) ei tulospaineita 3) sulje 1 selkeä häiriö. ");
-  } else if (r >= 75) {
-    lines.push("Stint-suositus: voimakkaampi kisa, hyödynnä kunto ja habit-bonus.");
-    pit.push("3 x 35–45 min syvää fokusta, välissä 8–10 min tauko. ");
-    pit.push("Yksi “push lap” -hetki, jossa teet jotain tavallista rohkeamman liikkeen. ");
-  } else {
-    lines.push("Stint-suositus: kontrolloitu päivä, ei maksimaalista riskiä.");
-    pit.push("2 x 30 min fokusoitu stintti päivän tärkeimpiin asioihin. ");
-    pit.push("1 x 15–20 min huoltojakso (liike + rauhoittava hengitys). ");
-  }
+  let count = 0;
+  last30.forEach(d => {
+    if (d.finalized && d.habits[habitId]?.done) count++;
+  });
+
+  return count / last30.length;
+}
+
+// ---------- MOMENTUM (Pat Riley) ----------
+
+function computeMomentum(day, habitScore, baseReadiness) {
+  const delta = day.readiness - baseReadiness;
+  const deltaNorm = Math.max(-20, Math.min(20, delta));
+  const quality = 1 + deltaNorm / 50;
+
+  let goodTotal = 0;
+
+  HABIT_GROUPS.forEach(group => {
+    group.habits.forEach(habit => {
+      const st = getHabitState(day, habit.id);
+      if (!st.done) return;
+
+      const streakOfficial = computeStreakOfficial(habit.id, day.date);
+      const preview = todayDay.finalized ? streakOfficial : streakOfficial + 1;
+      const streakFactor = Math.min(preview / 7, 1.5);
+
+      const freq30 = computeHabit30dFrequency(habit.id, day.date);
+
+      const consistency = clamp01(
+        0.5 * (streakFactor / 1.5) + 0.5 * freq30
+      );
+
+      const direction = group.directionWeight || 1.2;
+
+      const score = consistency * quality * direction;
+      goodTotal += score;
+    });
+  });
+
+  const { penalty } = computeBadHabitsToday(day);
+  const badPenalty = penalty * 2.5;
+
+  let raw = goodTotal * 25 - badPenalty * 5;
+  raw = Math.max(0, Math.min(100, Math.round(raw)));
+
+  day.momentum = raw;
+  return raw;
+}
+
+// ---------- MONTE CARLO ----------
+
+function computeMonteCarloScore(habitId, refISO) {
+  const sorted = [...days].sort((a, b) => (a.date < b.date ? -1 : 1));
+  const idx = sorted.findIndex(x => x.date === refISO);
+
+  const last30 = sorted.slice(Math.max(0, idx - 30), idx);
+
+  let trials = 0;
+  let successes = 0;
+
+  last30.forEach(d => {
+    if (d.finalized) {
+      trials++;
+      if (d.habits[habitId]?.done) successes++;
+    }
+  });
+
+  if (!trials) return 0;
+
+  const base = successes / trials;
+  const streak = computeStreakOfficial(habitId, refISO);
+  const streakBoost = Math.min(streak / 10, 0.3);
+
+  let p = base * 0.7 + streakBoost;
+  return Math.round(clamp01(p) * 100);
+}
+
+// ---------- AGGREGATE ----------
+
+function getHabitAggregate(habitId) {
+  let totalCompletions = 0;
+  let hardCount = 0;
+  let mastered = false;
+  let masteredAt = null;
+  let deltaSum = 0;
+  let deltaCount = 0;
+
+  days.forEach(d => {
+    const st = d.habits?.[habitId];
+    if (!st) return;
+
+    totalCompletions += st.totalCompletions || 0;
+    hardCount += st.hardDayCount || 0;
+
+    if (st.mastered) {
+      mastered = true;
+      if (!masteredAt || st.masteredAt < masteredAt) {
+        masteredAt = st.masteredAt;
+      }
+    }
+
+    deltaSum += st.readinessDeltaSum || 0;
+    deltaCount += st.readinessDeltaCount || 0;
+  });
+
+  const deltaAvg =
+    deltaCount > 0 ? Math.round((deltaSum / deltaCount) * 10) / 10 : 0;
 
   return {
-    strategy: lines.join(" "),
-    pitPlan: pit.join(""),
+    totalCompletions,
+    hardDayCount: hardCount,
+    mastered,
+    masteredAt,
+    readinessDeltaAvg: deltaAvg
   };
 }
 
-// ---- PIT RADIO ----
-function updatePitRadio(day) {
-  const statusEl = document.getElementById("pitStatus");
-  const msgEl = document.getElementById("pitMessage");
-  if (!statusEl || !msgEl) return;
+// ---------- UI: HABIT TILE ----------
 
-  const r = day.readiness;
-  const hard = day.hardDay;
+function makeHabitTile(h, st, group) {
+  const tile = document.createElement("div");
+  tile.className = "habit-tile";
 
-  const habitScore = computeHabitScoreForDay(day);
-  const habitPct = Math.round(habitScore * 100);
+  if (st.done) tile.classList.add("done");
 
-  if (hard) {
-    statusEl.textContent = `VARIKKO: HARD DAY MODE – readiness ${r} %`;
-    let msg = "Kuljettaja, tämä on raskas rata tänään. ";
-    if (day.energy <= 4) {
-      msg += "Fuel matala, älä luota pelkkään tahdonvoimaan – tee lyhyitä stinttejä, joilla on selkeä alku ja loppu. ";
+  const streak = computeStreakPreviewToday(h.id);
+  if (streak >= 7) tile.classList.add("streak7");
+
+  const header = document.createElement("div");
+  header.className = "habit-tile-header";
+
+  const title = document.createElement("div");
+  title.className = "habit-tile-title";
+  title.textContent = h.title;
+
+  const status = document.createElement("div");
+  status.className = "habit-tile-status";
+  status.textContent = st.mastered ? "MASTERED" : "";
+
+  header.appendChild(title);
+  header.appendChild(status);
+
+  const body = document.createElement("div");
+  body.className = "habit-tile-body";
+  body.textContent = h.desc;
+
+  const footer = document.createElement("div");
+  footer.className = "habit-tile-footer";
+
+  const streakEl = document.createElement("div");
+  streakEl.textContent = `Streak: ${streak}`;
+
+  const mc = computeMonteCarloScore(h.id, todayDay.date);
+  const mcEl = document.createElement("div");
+  mcEl.textContent = `MC: ${mc}%`;
+
+  footer.appendChild(streakEl);
+  footer.appendChild(mcEl);
+
+  tile.appendChild(header);
+  tile.appendChild(body);
+  tile.appendChild(footer);
+
+  tile.addEventListener("click", ev => {
+    const now = Date.now();
+    if (now - lastTapTime < 250) {
+      st.done = !st.done;
+      if (st.done) st.totalCompletions++;
+
+      saveDays();
+      renderHabitLibrary();
+      updateRealtimeHub();
+      pitRadioMessage("Habit päivitetty.");
     }
-    if (day.stress >= 7) {
-      msg += "Liikennettä paljon radalla (stressi korkea). Nosta näkyvyys: 5–10 min kävely tai hengitys ennen isoja päätöksiä. ";
-    }
-    if (habitPct > 0) {
-      msg += `Vaikeasta päivästä huolimatta habitstack ${habitPct} %. Yksi tehty kortti on jo voitto. `;
-    } else {
-      msg += "Varikko suosittelee: aloita tänään yhdestä habit-kortista, ei paketista. ";
-    }
-    msg += "Varikko: hyväksy hard mode, älä tuomitse itseäsi.";
-    msgEl.textContent = msg;
-  } else {
-    statusEl.textContent = `VARIKKO: READY – readiness ${r} %`;
-    let msg = "Auto on ajokunnossa. ";
-    if (r >= 75) {
-      msg += "Päivä näyttää vahvalta – tämä on hyvä hetki testata rajoja turvallisesti. ";
-    } else {
-      msg += "Aja siististi, ilman turhaa riskiä. ";
-    }
-    if (habitPct >= 50) {
-      msg += `Habitit tukevat kisaa (${habitPct} %). Jatka korttien keräämistä pitkin päivää. `;
-    } else {
-      msg += "Nosta päivää tekemällä 1–2 habit-korttia valmiiksi. ";
-    }
-    msgEl.textContent = msg;
-  }
-}
-
-// ---- RENDER TODAY ----
-function renderToday() {
-  if (!todayDay) return;
-  const d = todayDay;
-
-  computeReadiness(d);
-
-  const dateLabel = document.getElementById("todayDateLabel");
-  if (dateLabel) {
-    dateLabel.textContent = `Päivä: ${formatFi(d.date)} ${
-      d.finalized ? "· LUKITTU" : ""
-    }`;
-  }
-  const readinessEl = document.getElementById("readinessValue");
-  if (readinessEl) readinessEl.textContent = `${d.readiness} %`;
-
-  // Tagit
-  const dayModeTag = document.getElementById("dayModeTag");
-  if (dayModeTag) {
-    let txt = "MODE: ";
-    if (d.dayType === "practice") txt += "HARJOITUS";
-    else if (d.dayType === "qualifying") txt += "KARSINTA";
-    else if (d.dayType === "safety") txt += "SAFETY CAR";
-    else txt += "RACE";
-    dayModeTag.textContent = txt;
-  }
-  const hardTag = document.getElementById("hardDayTag");
-  if (hardTag) {
-    hardTag.textContent = d.hardDay ? "PÄIVÄ: HARD DAY" : "PÄIVÄ: NORMAALI";
-  }
-
-  const habitSummaryTag = document.getElementById("habitSummaryTag");
-  if (habitSummaryTag) {
-    const habitScore = computeHabitScoreForDay(d);
-    const habitPct = Math.round(habitScore * 100);
-    let txt = `HABIT: ${habitPct} %`;
-    habitSummaryTag.textContent = txt;
-  }
-
-  // Input label helper
-  const setLabel = (id, val) => {
-    const el = document.getElementById(id);
-    if (el) el.textContent = `${val}/10`;
-  };
-
-  setLabel("difficultyLabel", d.difficulty);
-  setLabel("energyLabel", d.energy);
-  setLabel("focusLabel", d.focus);
-  setLabel("bodyLoadLabel", d.bodyLoad);
-  setLabel("stressLabel", d.stress);
-  setLabel("moodLabel", d.mood);
-  setLabel("motivationLabel", d.motivation);
-  setLabel("confidenceLabel", d.confidence);
-
-  const dayTypeSelect = document.querySelector("select[data-field='dayType']");
-  if (dayTypeSelect) dayTypeSelect.value = d.dayType;
-
-  const sleepSelect = document.querySelector("select[data-field='sleep']");
-  if (sleepSelect) sleepSelect.value = d.sleep;
-
-  const goalSelect = document.querySelector("select[data-field='goal']");
-  if (goalSelect) goalSelect.value = d.goal;
-
-  const sliderMap = {
-    difficulty: d.difficulty,
-    energy: d.energy,
-    focus: d.focus,
-    bodyLoad: d.bodyLoad,
-    stress: d.stress,
-    mood: d.mood,
-    motivation: d.motivation,
-    confidence: d.confidence,
-  };
-
-  Object.entries(sliderMap).forEach(([field, value]) => {
-    const input = document.querySelector(`input[type="range"][data-field="${field}"]`);
-    if (input) input.value = value;
+    lastTapTime = now;
   });
 
-  const notesEl = document.getElementById("notes");
-  if (notesEl) {
-    notesEl.value = d.notes || "";
-    notesEl.disabled = d.finalized;
-  }
-
-  const finalizeBtn = document.getElementById("finalizeBtn");
-  if (finalizeBtn) {
-    finalizeBtn.disabled = d.finalized;
-    finalizeBtn.textContent = d.finalized
-      ? "Telemetria lukittu tälle päivälle"
-      : "Lukitse telemetria tälle päivälle";
-  }
-
-  // Strategia
-  const stintSummary = document.getElementById("stintSummary");
-  const pitPlan = document.getElementById("pitPlan");
-  if (stintSummary) stintSummary.textContent = d.strategy || "";
-  if (pitPlan) pitPlan.textContent = d.pitPlan || "";
-
-  updatePitRadio(d);
-  renderHabitReel();
-  renderHistory();
+  return tile;
 }
 
-// ---- HABIT REEL RENDER ----
-function renderHabitReel() {
-  const reelEl = document.getElementById("habitReel");
-  const dotsEl = document.getElementById("habitDots");
-  if (!reelEl || !dotsEl || !todayDay) return;
+// ---------- MASTERED SECTION ----------
 
-  const habit = HABITS[currentHabitIndex];
-  const state = getHabitStateForDay(todayDay, habit.id);
-  const consistency = computeHabitConsistency(habit.id);
+function renderMasteredSection() {
+  const container = document.createElement("div");
+  container.className = "habit-row";
 
-  reelEl.innerHTML = "";
+  const title = document.createElement("div");
+  title.className = "habit-row-title";
+  title.textContent = "Mastered Collection";
+  container.appendChild(title);
 
-  const card = document.createElement("div");
-  card.className = "habit-card";
-  if (state.done) card.classList.add("done");
-  if (state.perfect) card.classList.add("perfect");
+  const strip = document.createElement("div");
+  strip.className = "habit-row-strip";
 
-  const statusText = state.perfect
-    ? "Perfect · tehty erittäin hyvin"
-    : state.done
-    ? "Tehty tälle päivälle"
-    : "Ei vielä tehty";
+  HABIT_GROUPS.forEach(group => {
+    group.habits.forEach(h => {
+      const agg = getHabitAggregate(h.id);
+      if (!agg.mastered) return;
 
-  const consistencyText =
-    consistency.totalDays > 0
-      ? `Consistency: ${consistency.percent}% (${consistency.doneCount}/${consistency.totalDays} päivää)`
-      : "Consistency: 0% (aloita kortin kerääminen)";
+      const tile = document.createElement("div");
+      tile.className = "habit-tile streak7";
 
-  const hintText = state.perfect
-    ? "Tuplaklikkaa / tuplanapauta nollataksesi kortin."
-    : state.done
-    ? "Tuplaklikkaa / tuplanapauta tehdäksesi tästä 'perfect stintin'."
-    : "Tuplaklikkaa / tuplanapauta merkkaamaan habit tehdyn.";
+      const header = document.createElement("div");
+      header.className = "habit-tile-header";
 
-  card.innerHTML = `
-    <div class="habit-card-header">
-      <div class="habit-title">${habit.title}</div>
-      <span class="habit-status-pill">${statusText}</span>
-    </div>
-    <p class="habit-desc">${habit.desc}</p>
-    <div class="habit-meta">
-      <span class="habit-consistency">${consistencyText}</span>
-      <span class="habit-hint">${hintText}</span>
-    </div>
-  `;
+      const nm = document.createElement("div");
+      nm.className = "habit-tile-title";
+      nm.textContent = h.title;
 
-  // Double-click / double-tap
-  card.addEventListener("dblclick", () => {
-    toggleHabitState();
+      const badge = document.createElement("div");
+      badge.className = "habit-tile-status";
+      badge.textContent = "MASTERED";
+
+      header.appendChild(nm);
+      header.appendChild(badge);
+
+      const body = document.createElement("div");
+      body.className = "habit-tile-body";
+      body.innerHTML =
+        `Suorituksia: ${agg.totalCompletions}<br>` +
+        `Vaikeita päiviä: ${agg.hardDayCount}<br>` +
+        `Readiness delta: ${agg.readinessDeltaAvg}`;
+
+      const footer = document.createElement("div");
+      footer.className = "habit-tile-footer";
+      footer.innerHTML = `Unlck: ${agg.masteredAt ? agg.masteredAt.slice(5) : "-"}`;
+
+      tile.appendChild(header);
+      tile.appendChild(body);
+      tile.appendChild(footer);
+
+      strip.appendChild(tile);
+    });
   });
 
-  card.addEventListener(
-    "touchstart",
-    (e) => {
+  container.appendChild(strip);
+  return container;
+}
+
+// ---------- BAD HABITS ----------
+
+function renderBadHabitSection() {
+  const container = document.createElement("div");
+  container.className = "habit-row";
+
+  const title = document.createElement("div");
+  title.className = "habit-row-title";
+  title.textContent = "Huonot Habitit";
+  container.appendChild(title);
+
+  const strip = document.createElement("div");
+  strip.className = "habit-row-strip";
+
+  BAD_HABITS.forEach(b => {
+    const st = getBadHabitState(todayDay, b.id);
+
+    const tile = document.createElement("div");
+    tile.className = "habit-tile";
+    if (st.done) tile.classList.add("done");
+
+    tile.innerHTML =
+      `<div class='habit-tile-header'><div class='habit-tile-title'>${b.title}</div><div class='habit-tile-status'>-${b.penalty}</div></div>` +
+      `<div class='habit-tile-body'>Haittakerroin: ${b.penalty}</div>` +
+      `<div class='habit-tile-footer'><span></span><span></span></div>`;
+
+    tile.addEventListener("click", ev => {
       const now = Date.now();
-      const delta = now - lastHabitTapTime;
-      lastHabitTapTime = now;
-      if (delta < 280) {
-        e.preventDefault();
-        toggleHabitState();
+      if (now - lastTapTime < 250) {
+        st.done = !st.done;
+        saveDays();
+        renderHabitLibrary();
+        updateRealtimeHub();
+        pitRadioMessage("Huono habit päivitetty.");
       }
-    },
-    { passive: false }
-  );
+      lastTapTime = now;
+    });
 
-  // Swipe vasen / oikea
-  let touchStartX = null;
-  card.addEventListener(
-    "touchstart",
-    (e) => {
-      const t = e.touches[0];
-      touchStartX = t.clientX;
-    },
-    { passive: true }
-  );
+    strip.appendChild(tile);
+  });
 
-  card.addEventListener(
-    "touchend",
-    (e) => {
-      if (touchStartX == null) return;
-      const t = e.changedTouches[0];
-      const deltaX = t.clientX - touchStartX;
-      const threshold = 35;
-      if (deltaX < -threshold) {
-        nextHabit();
-      } else if (deltaX > threshold) {
-        prevHabit();
-      }
-      touchStartX = null;
-    },
-    { passive: true }
-  );
+  container.appendChild(strip);
+  return container;
+}
 
-  reelEl.appendChild(card);
+// ---------- LIBRARY RENDER ----------
 
-  // Dots
-  dotsEl.innerHTML = "";
-  HABITS.forEach((h, idx) => {
-    const dot = document.createElement("div");
-    dot.className = "habit-dot";
-    if (idx === currentHabitIndex) dot.classList.add("active");
-    dotsEl.appendChild(dot);
+function renderHabitLibrary() {
+  if (!todayDay) return;
+
+  const { baseReadiness } = computeReadiness(todayDay);
+
+  const headerDate = document.getElementById("libraryDate");
+  headerDate.textContent = "Päivä: " + formatFi(todayDay.date);
+
+  const sum = computeHabitSummary(todayDay);
+  document.getElementById("libraryHabitSummary").textContent =
+    `Suoritettu: ${sum.done}/${sum.total}`;
+
+  document.getElementById("libraryReadiness").textContent =
+    `Readiness: ${todayDay.readiness}%`;
+
+  const container = document.getElementById("habitSections");
+  container.innerHTML = "";
+
+  container.appendChild(renderMasteredSection());
+
+  HABIT_GROUPS.forEach(group => {
+    const row = document.createElement("div");
+    row.className = "habit-row";
+
+    const title = document.createElement("div");
+    title.className = "habit-row-title";
+    title.textContent = group.title;
+
+    const strip = document.createElement("div");
+    strip.className = "habit-row-strip";
+
+    group.habits.forEach(h => {
+      const st = getHabitState(todayDay, h.id);
+      strip.appendChild(makeHabitTile(h, st, group));
+    });
+
+    row.appendChild(title);
+    row.appendChild(strip);
+    container.appendChild(row);
+  });
+
+  container.appendChild(renderBadHabitSection());
+  updateRealtimeHub();
+}
+
+// ---------- REAL TIME HUB ----------
+
+function updateRealtimeHub() {
+  if (!todayDay) return;
+
+  const sum = computeHabitSummary(todayDay);
+  const masteredCount = countMasteredCards();
+
+  let lifetime = 0;
+  HABIT_GROUPS.forEach(g => {
+    g.habits.forEach(h => {
+      lifetime += getHabitAggregate(h.id).totalCompletions;
+    });
+  });
+
+  document.getElementById("hubHeadline").textContent =
+    `Readiness ${todayDay.readiness}% · Momentum ${todayDay.momentum}/100 · Mastered ${masteredCount}`;
+
+  document.getElementById("hubMasteredCount").textContent = masteredCount;
+  document.getElementById("hubTodayHabits").textContent =
+    `${sum.done}/${sum.total}`;
+  document.getElementById("hubLifetime").textContent = lifetime;
+}
+
+function countMasteredCards() {
+  let count = 0;
+  HABIT_GROUPS.forEach(g => {
+    g.habits.forEach(h => {
+      if (getHabitAggregate(h.id).mastered) count++;
+    });
+  });
+  return count;
+}
+
+// ---------- PIT RADIO ----------
+
+function pitRadioMessage(msg) {
+  document.getElementById("pitMessage").textContent = msg;
+}
+
+// ---------- SLIDERS ----------
+
+function bindSliders() {
+  document.querySelectorAll("input[type=range]").forEach(r => {
+    r.addEventListener("input", () => {
+      const field = r.getAttribute("data-field");
+      const label = document.getElementById(field + "Label");
+
+      todayDay[field] = Number(r.value);
+      if (label) label.textContent = `${r.value}/10`;
+
+      saveDays();
+      computeReadiness(todayDay);
+      renderHabitLibrary();
+      pitRadioMessage(field + " päivitetty.");
+    });
+  });
+
+  document.querySelectorAll("select[data-field]").forEach(sel => {
+    sel.addEventListener("change", () => {
+      const field = sel.getAttribute("data-field");
+      todayDay[field] = sel.value;
+
+      saveDays();
+      renderHabitLibrary();
+    });
+  });
+
+  const notes = document.getElementById("notes");
+  notes.addEventListener("input", () => {
+    todayDay.notes = notes.value;
+    saveDays();
   });
 }
 
-function nextHabit() {
-  currentHabitIndex = (currentHabitIndex + 1) % HABITS.length;
-  renderHabitReel();
-}
+// ---------- FINALIZE DAY ----------
 
-function prevHabit() {
-  currentHabitIndex =
-    (currentHabitIndex - 1 + HABITS.length) % HABITS.length;
-  renderHabitReel();
-}
-
-function toggleHabitState() {
+function finalizeToday() {
   if (!todayDay) return;
-  const habit = HABITS[currentHabitIndex];
-  const state = getHabitStateForDay(todayDay, habit.id);
 
-  // kolme tilaa: off -> done -> perfect -> off
-  if (!state.done && !state.perfect) {
-    state.done = true;
-    state.perfect = false;
-  } else if (state.done && !state.perfect) {
-    state.done = true;
-    state.perfect = true;
-  } else {
-    state.done = false;
-    state.perfect = false;
+  pitRadioMessage("Päivä lukittu.");
+
+  const base = computeBaseReadinessNoHabits(todayDay);
+  const delta = todayDay.readiness - base;
+
+  if (todayDay.hardDay) {
+    forEachHabit(h => {
+      const st = getHabitState(todayDay, h.id);
+      if (st.done) st.hardDayCount++;
+    });
   }
 
-  scheduleRecompute();
+  forEachHabit(h => {
+    const st = getHabitState(todayDay, h.id);
+    if (st.done) {
+      st.readinessDeltaSum += delta;
+      st.readinessDeltaCount++;
+    }
+  });
+
+  forEachHabit(h => {
+    const streak = computeStreakOfficial(h.id, todayDay.date);
+    if (streak >= 7) {
+      const st = getHabitState(todayDay, h.id);
+      if (!st.mastered) {
+        st.mastered = true;
+        st.masteredAt = todayDay.date;
+      }
+    }
+  });
+
+  todayDay.finalized = true;
+
+  saveDays();
+  renderHabitLibrary();
+  renderHistory();
+  updateRealtimeHub();
 }
 
-// ---- HISTORY ----
-function computeHabitSummaryText(day) {
-  if (!day.habits) return "Habit: 0/" + HABITS.length;
-  let done = 0;
-  let perfect = 0;
-  HABITS.forEach((h) => {
-    const st = day.habits[h.id];
-    if (!st) return;
-    if (st.done) done += 1;
-    if (st.perfect) perfect += 1;
-  });
-  return `Habit: ${done}/${HABITS.length} (${perfect} perfect)`;
-}
+// ---------- HISTORY ----------
 
 function renderHistory() {
-  const listEl = document.getElementById("historyList");
-  if (!listEl) return;
-  listEl.innerHTML = "";
-
-  if (!days.length) {
-    const p = document.createElement("p");
-    p.textContent = "Ei vielä telemetriaa. Aloita täyttämällä tämän päivän rata.";
-    p.style.fontSize = "0.85rem";
-    p.style.color = "#a7b0d9";
-    listEl.appendChild(p);
-    return;
-  }
+  const list = document.getElementById("historyList");
+  if (!list) return;
 
   const sorted = [...days].sort((a, b) => (a.date < b.date ? 1 : -1));
+  list.innerHTML = "";
 
-  sorted.forEach((d) => {
-    computeReadiness(d);
-    const div = document.createElement("div");
-    div.className = "history-item";
-    div.dataset.dayId = d.id;
+  sorted.forEach(d => {
+    const item = document.createElement("div");
+    item.className = "history-item";
 
-    const tag =
-      d.hardDay && d.readiness >= 40
-        ? "Hard day, mutta maaliin"
-        : d.hardDay
-        ? "Hard day"
-        : d.readiness >= 70
-        ? "Kova kisa"
-        : "Peruspäivä";
+    const dt = document.createElement("div");
+    dt.className = "history-item-date";
+    dt.textContent = formatFi(d.date);
 
-    const habitSummary = computeHabitSummaryText(d);
+    const tag = document.createElement("div");
+    tag.className = "history-item-tag";
+    tag.textContent = `Ready ${d.readiness}% · Mom ${d.momentum}`;
 
-    div.innerHTML = `
-      <div class="history-item-date">${formatFi(d.date)}</div>
-      <div class="history-item-score">Readiness ${d.readiness}%</div>
-      <div class="history-item-tag">${habitSummary}</div>
-      <div class="history-item-tag">${tag}</div>
-    `;
+    item.appendChild(dt);
+    item.appendChild(tag);
 
-    div.addEventListener("click", () => selectHistory(d.id));
+    item.addEventListener("click", () => {
+      document.querySelectorAll(".history-item")
+        .forEach(i => i.classList.remove("selected"));
+      item.classList.add("selected");
 
-    if (todayDay && d.id === todayDay.id) {
-      div.classList.add("selected");
-    }
-
-    listEl.appendChild(div);
-  });
-}
-
-function selectHistory(id) {
-  const d = days.find((x) => x.id === id);
-  if (!d) return;
-
-  const listEl = document.getElementById("historyList");
-  if (listEl) {
-    listEl.querySelectorAll(".history-item").forEach((item) => {
-      item.classList.remove("selected");
+      document.getElementById("historyDetail")
+        .textContent = JSON.stringify(d, null, 2);
     });
-    const active = listEl.querySelector(`[data-day-id="${id}"]`);
-    if (active) active.classList.add("selected");
-  }
 
-  const detailEl = document.getElementById("historyDetail");
-  if (!detailEl) return;
-
-  computeReadiness(d);
-  const habitSummary = computeHabitSummaryText(d);
-
-  detailEl.innerHTML = `
-    <h3>${formatFi(d.date)} ${d.finalized ? "· LUKITTU" : ""}</h3>
-    <p><strong>Ratatyyppi:</strong> ${d.dayType}</p>
-    <p><strong>Vaikeus:</strong> ${d.difficulty}/10 · <strong>Readiness:</strong> ${d.readiness}%</p>
-    <p><strong>Fuel:</strong> ${d.energy}/10 · <strong>Grip:</strong> ${d.focus}/10 · <strong>Stressi:</strong> ${d.stress}/10</p>
-    <p><strong>Habits:</strong> ${habitSummary}</p>
-    <p><strong>Strategia:</strong> ${d.strategy || "Ei strategiaa tallennettuna."}</p>
-    <p><strong>Varikkosuunnitelma:</strong> ${d.pitPlan || "Ei suunnitelmaa."}</p>
-    <p><strong>Muistiinpanot:</strong> ${
-      d.notes && d.notes.trim()
-        ? d.notes.replace(/\n/g, "<br>")
-        : "<span style='color:#6f7aa5'>Ei merkintöjä.</span>"
-    }</p>
-  `;
-}
-
-// ---- EXPORT ----
-function exportData() {
-  const json = JSON.stringify(days, null, 2);
-  const blob = new Blob([json], { type: "application/json" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = `fi_varikko_telemetria_${getTodayISO()}.json`;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
-}
-
-// ---- VIEW SWITCH ----
-function setView(view) {
-  const todayView = document.getElementById("view-today");
-  const histView = document.getElementById("view-history");
-  const buttons = document.querySelectorAll(".nav-btn");
-
-  buttons.forEach((b) => {
-    const v = b.getAttribute("data-view");
-    b.classList.toggle("active", v === view);
+    list.appendChild(item);
   });
-
-  if (view === "today") {
-    todayView && todayView.classList.add("active");
-    histView && histView.classList.remove("active");
-  } else {
-    histView && histView.classList.add("active");
-    todayView && todayView.classList.remove("active");
-  }
 }
 
-// ---- EVENTS ----
-function scheduleRecompute() {
-  if (recomputeTimer) clearTimeout(recomputeTimer);
-  recomputeTimer = setTimeout(() => {
-    recomputeTimer = null;
-    saveDays();
-    renderToday();
-  }, 70);
+// ---------- EXPORT ----------
+
+function bindExport() {
+  const btn = document.getElementById("exportBtn");
+  btn.addEventListener("click", () => {
+    const blob = new Blob([JSON.stringify(days, null, 2)], {
+      type: "application/json"
+    });
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "FI_VARIKKO_DATA.json";
+    a.click();
+
+    pitRadioMessage("Export valmis.");
+  });
 }
 
-function handleInput(e) {
-  if (!todayDay) return;
-  const el = e.target;
-  const field = el.getAttribute("data-field");
-  if (!field) return;
+// ---------- NAV ----------
 
-  if (el.tagName === "INPUT" && el.type === "range") {
-    const val = Number(el.value);
-    todayDay[field] = val;
-
-    const labelMap = {
-      difficulty: "difficultyLabel",
-      energy: "energyLabel",
-      focus: "focusLabel",
-      bodyLoad: "bodyLoadLabel",
-      stress: "stressLabel",
-      mood: "moodLabel",
-      motivation: "motivationLabel",
-      confidence: "confidenceLabel",
-    };
-    const labelId = labelMap[field];
-    if (labelId) {
-      const l = document.getElementById(labelId);
-      if (l) l.textContent = `${val}/10`;
-    }
-  } else if (el.tagName === "SELECT") {
-    todayDay[field] = el.value;
-  }
-
-  scheduleRecompute();
-}
-
-function setupEvents() {
-  const navBtns = document.querySelectorAll(".nav-btn");
-  navBtns.forEach((btn) => {
+function bindNavigation() {
+  document.querySelectorAll(".nav-btn").forEach(btn => {
     btn.addEventListener("click", () => {
+      document.querySelectorAll(".nav-btn")
+        .forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+
       const view = btn.getAttribute("data-view");
-      if (view) setView(view);
+      document.querySelectorAll(".view")
+        .forEach(v => v.classList.remove("active"));
+
+      if (view) {
+        document.getElementById("view-" + view).classList.add("active");
+      }
     });
   });
-
-  const inputs = document.querySelectorAll("[data-field]");
-  inputs.forEach((el) => {
-    if (el.tagName === "INPUT" && el.type === "range") {
-      el.addEventListener("input", handleInput);
-    } else if (el.tagName === "SELECT") {
-      el.addEventListener("change", handleInput);
-    }
-  });
-
-  const notesEl = document.getElementById("notes");
-  if (notesEl) {
-    notesEl.addEventListener("input", (e) => {
-      if (!todayDay) return;
-      todayDay.notes = e.target.value;
-      saveDays();
-    });
-  }
-
-  const finalizeBtn = document.getElementById("finalizeBtn");
-  if (finalizeBtn) {
-    finalizeBtn.addEventListener("click", () => {
-      if (!todayDay) return;
-      todayDay.finalized = true;
-      todayDay.finalizedAt = new Date().toISOString();
-      saveDays();
-      renderToday();
-      setStatus("Päivän telemetria lukittu pakkaan.");
-    });
-  }
-
-  const exportBtn = document.getElementById("exportBtn");
-  if (exportBtn) {
-    exportBtn.addEventListener("click", exportData);
-  }
-
-  // Double-click zoom koko päivän kortille
-  const dayCard = document.getElementById("todayCard");
-  if (dayCard) {
-    dayCard.addEventListener("dblclick", () => {
-      dayCard.classList.toggle("zoom");
-    });
-  }
 }
 
-// ---- INIT ----
-document.addEventListener("DOMContentLoaded", () => {
+// ---------- INIT ----------
+
+function init() {
   days = loadDays();
   ensureToday();
-  renderToday();
-  setupEvents();
-  setStatus("Valmis. Telemetria ja habit-kortit tallentuvat automaattisesti.");
-});
+  bindSliders();
+  bindExport();
+  bindNavigation();
+  renderHabitLibrary();
+  renderHistory();
+  updateRealtimeHub();
+  pitRadioMessage("FI Varikko käynnistetty. Telemetria valmis.");
+}
+
+window.addEventListener("load", init);
+
+// ================================================================
+// LOPPU — Täysi app.js valmis.
+// ================================================================
