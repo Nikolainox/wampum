@@ -1,118 +1,57 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fi">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>FI Varikko</title>
+  <title>Life Deck</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
 
+  <!-- TOP NAV -->
   <div id="topNav">
-    <button class="nav-btn active" data-view="hub">HUB</button>
-    <button class="nav-btn" data-view="library">Habits</button>
-    <button class="nav-btn" data-view="telemetry">Telemetry</button>
-    <button class="nav-btn" data-view="history">History</button>
-    <button class="nav-btn small" id="exportBtn">Export</button>
+    <button class="nav-btn active" data-view="home">Home</button>
+    <button class="nav-btn" data-view="library">Library</button>
+    <button class="nav-btn" data-view="gold">Gold</button>
+    <button class="nav-btn small" id="finalizeBtn">Finalize</button>
   </div>
 
-  <div id="hub" class="view active">
-    <div id="hubHeadline">Readiness --%</div>
-    <div id="hubSubline">Daily Performance Telemetry</div>
+  <!-- HUB (LIGHT DATA) -->
+  <div id="hub">
+    <div id="hubLine">
+      <span id="hubReadiness">Readiness --%</span>
+      <span id="hubMomentum">Momentum --</span>
+    </div>
+    <div id="hubSub">Today’s focus cards</div>
+  </div>
 
-    <div id="hubStats">
-      <div class="hubBox">
-        <label>Mastered</label>
-        <div id="hubMasteredCount">0</div>
-      </div>
-      <div class="hubBox">
-        <label>Today's Habits</label>
-        <div id="hubTodayHabits">0/0</div>
-      </div>
-      <div class="hubBox">
-        <label>Lifetime</label>
-        <div id="hubLifetime">0</div>
-      </div>
+  <!-- HOME / NETFLIX STYLE -->
+  <div id="view-home" class="view active">
+    <div class="section-title">Today’s Deck</div>
+    <div id="activeCards" class="card-row"></div>
+
+    <div class="empty-state" id="emptyHome">
+      Pick 1–3 habits from Library to play today.
     </div>
   </div>
 
-  <div id="pitRadio">
-    <div id="pitStatus">PIT RADIO</div>
-    <div id="pitMessage">Telemetry Online</div>
-  </div>
-
+  <!-- LIBRARY / SPOTIFY STYLE -->
   <div id="view-library" class="view">
-    <div id="libraryHeader">
-      <span id="libraryDate">Day</span>
-      <span id="libraryHabitSummary"></span>
-      <span id="libraryReadiness"></span>
-    </div>
-    <div id="habitSections"></div>
+    <div id="librarySections"></div>
   </div>
 
-  <div id="view-telemetry" class="view">
-    <div id="telemetryPanel">
-      <div id="todayDateLabel"></div>
+  <!-- GOLD CARDS -->
+  <div id="view-gold" class="view">
+    <div class="section-title">Gold Cards</div>
+    <div id="goldCards" class="card-row"></div>
 
-      <div id="dayModeTag"></div>
-      <div id="hardDayTag"></div>
-      <div id="habitSummaryTag"></div>
-
-      <div class="sliderBlock">
-        <label>Energy</label>
-        <input type="range" min="1" max="10" value="5" data-field="energy" />
-        <span id="energyLabel">5/10</span>
-      </div>
-
-      <div class="sliderBlock">
-        <label>Stress</label>
-        <input type="range" min="1" max="10" value="5" data-field="stress" />
-        <span id="stressLabel">5/10</span>
-      </div>
-
-      <div class="sliderBlock">
-        <label>Mood</label>
-        <input type="range" min="1" max="10" value="5" data-field="mood" />
-        <span id="moodLabel">5/10</span>
-      </div>
-
-      <div class="sliderBlock">
-        <label>Motivation</label>
-        <input type="range" min="1" max="10" value="5" data-field="motivation" />
-        <span id="motivationLabel">5/10</span>
-      </div>
-
-      <div class="sliderBlock">
-        <label>Difficulty</label>
-        <input type="range" min="1" max="10" value="5" data-field="difficulty" />
-        <span id="difficultyLabel">5/10</span>
-      </div>
-
-      <div class="selectBlock">
-        <label>Sleep</label>
-        <select data-field="sleep">
-          <option value="ok">OK</option>
-          <option value="good">Good</option>
-          <option value="bad">Bad</option>
-        </select>
-      </div>
-
-      <div class="notesBlock">
-        <label>Notes</label>
-        <textarea id="notes" rows="4"></textarea>
-      </div>
-
-      <button class="finalize" onclick="finalizeToday()">Finalize Day</button>
+    <div class="empty-state" id="emptyGold">
+      No gold cards yet. Consistency creates identity.
     </div>
   </div>
 
-  <div id="view-history" class="view">
-    <div id="history">
-      <div id="historyList"></div>
-      <div id="historyDetail"></div>
-    </div>
-    <div id="statusMessage"></div>
-  </div>
+  <!-- STATUS -->
+  <div id="statusMessage"></div>
 
   <script src="app.js"></script>
 </body>
