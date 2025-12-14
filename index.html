@@ -2,56 +2,172 @@
 <html lang="fi">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>Life Deck</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
 
-  <!-- TOP NAV -->
-  <div id="topNav">
-    <button class="nav-btn active" data-view="home">Home</button>
-    <button class="nav-btn" data-view="library">Library</button>
-    <button class="nav-btn" data-view="gold">Gold</button>
-    <button class="nav-btn small" id="finalizeBtn">Finalize</button>
-  </div>
-
-  <!-- HUB (LIGHT DATA) -->
-  <div id="hub">
-    <div id="hubLine">
-      <span id="hubReadiness">Readiness --%</span>
-      <span id="hubMomentum">Momentum --</span>
+  <header id="topNav">
+    <div id="brand">
+      <div id="brandMark"></div>
+      <div id="brandText">Life Deck</div>
     </div>
-    <div id="hubSub">Today’s focus cards</div>
-  </div>
 
-  <!-- HOME / NETFLIX STYLE -->
-  <div id="view-home" class="view active">
-    <div class="section-title">Today’s Deck</div>
-    <div id="activeCards" class="card-row"></div>
+    <nav id="tabs">
+      <button class="tab active" data-view="home">Home</button>
+      <button class="tab" data-view="library">Library</button>
+      <button class="tab" data-view="gold">Gold</button>
+      <button class="tab" data-view="telemetry">Telemetry</button>
+    </nav>
 
-    <div class="empty-state" id="emptyHome">
-      Pick 1–3 habits from Library to play today.
+    <button id="finalizeBtn" class="cta">Finalize</button>
+  </header>
+
+  <section id="hub">
+    <div id="hubCard">
+      <div id="hubTop">
+        <div id="hubTitle">Scoreboard</div>
+        <div id="hubLive">
+          <span class="dot"></span>
+          <span>LIVE</span>
+        </div>
+      </div>
+
+      <div id="hubStats">
+        <div class="stat">
+          <div class="k">Readiness</div>
+          <div class="v" id="hubReadiness">--%</div>
+        </div>
+        <div class="stat">
+          <div class="k">Momentum</div>
+          <div class="v" id="hubMomentum">--</div>
+        </div>
+        <div class="stat">
+          <div class="k">Tomorrow</div>
+          <div class="v" id="hubTomorrow">--%</div>
+        </div>
+      </div>
+
+      <div id="hubSub">
+        <span id="hubSubtitle">Valitse kortit Librarystä. Double tap = lisää / done. Long press = remove.</span>
+      </div>
     </div>
-  </div>
+  </section>
 
-  <!-- LIBRARY / SPOTIFY STYLE -->
-  <div id="view-library" class="view">
-    <div id="librarySections"></div>
-  </div>
+  <main id="views">
 
-  <!-- GOLD CARDS -->
-  <div id="view-gold" class="view">
-    <div class="section-title">Gold Cards</div>
-    <div id="goldCards" class="card-row"></div>
+    <section id="view-home" class="view active">
+      <div class="sectionHead">
+        <div class="sectionTitle">Today’s Deck</div>
+        <div class="sectionMeta">
+          <span id="todayLabel">—</span>
+          <span id="todayCount">0 cards</span>
+        </div>
+      </div>
 
-    <div class="empty-state" id="emptyGold">
-      No gold cards yet. Consistency creates identity.
-    </div>
-  </div>
+      <div class="railWrap">
+        <div class="rail" id="activeRail"></div>
+      </div>
 
-  <!-- STATUS -->
-  <div id="statusMessage"></div>
+      <div class="empty" id="homeEmpty">
+        Lisää 1–3 korttia Librarystä. Pidä pakka kevyt.
+      </div>
+
+      <div class="hint">
+        <span class="pill">Double tap</span> done • <span class="pill">Long press</span> remove • <span class="pill">Finalize</span> lukitsee päivän
+      </div>
+    </section>
+
+    <section id="view-library" class="view">
+      <div class="sectionHead">
+        <div class="sectionTitle">Library</div>
+        <div class="sectionMeta">
+          <span class="pill">Double tap</span> Add to Today
+        </div>
+      </div>
+
+      <div id="librarySections"></div>
+    </section>
+
+    <section id="view-gold" class="view">
+      <div class="sectionHead">
+        <div class="sectionTitle">Gold Cards</div>
+        <div class="sectionMeta">
+          <span id="goldCount">0</span>
+          <span>unlocked</span>
+        </div>
+      </div>
+
+      <div class="railWrap">
+        <div class="rail" id="goldRail"></div>
+      </div>
+
+      <div class="empty" id="goldEmpty">
+        Ei vielä Gold-kortteja. Toistuva valinta rakentaa identiteetin.
+      </div>
+    </section>
+
+    <section id="view-telemetry" class="view">
+      <div class="telemetryCard">
+        <div class="sectionTitle">Telemetry</div>
+        <div class="telemetryGrid">
+          <div class="tField">
+            <label>Energy</label>
+            <input type="range" min="1" max="10" value="5" data-field="energy" />
+            <div class="tVal" id="energyLabel">5/10</div>
+          </div>
+
+          <div class="tField">
+            <label>Stress</label>
+            <input type="range" min="1" max="10" value="5" data-field="stress" />
+            <div class="tVal" id="stressLabel">5/10</div>
+          </div>
+
+          <div class="tField">
+            <label>Mood</label>
+            <input type="range" min="1" max="10" value="5" data-field="mood" />
+            <div class="tVal" id="moodLabel">5/10</div>
+          </div>
+
+          <div class="tField">
+            <label>Motivation</label>
+            <input type="range" min="1" max="10" value="5" data-field="motivation" />
+            <div class="tVal" id="motivationLabel">5/10</div>
+          </div>
+
+          <div class="tField">
+            <label>Difficulty</label>
+            <input type="range" min="1" max="10" value="5" data-field="difficulty" />
+            <div class="tVal" id="difficultyLabel">5/10</div>
+          </div>
+
+          <div class="tField">
+            <label>Sleep</label>
+            <select data-field="sleep">
+              <option value="good">Good</option>
+              <option value="ok" selected>OK</option>
+              <option value="bad">Bad</option>
+            </select>
+            <div class="tVal" id="sleepLabel">OK</div>
+          </div>
+        </div>
+
+        <div class="tNotes">
+          <label>Notes</label>
+          <textarea id="notes" rows="4" placeholder="Lyhyt merkintä…"></textarea>
+        </div>
+
+        <div class="telemetryFoot">
+          <button id="exportBtn" class="ghost">Export JSON</button>
+          <div class="tiny" id="telemetryHint">Monte Carlo + Bayes päivittyy finalize jälkeen (ja hubissa livenä).</div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <div id="toast" class="toast"></div>
 
   <script src="app.js"></script>
 </body>
