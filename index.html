@@ -1,5 +1,6 @@
+<!-- index.html -->
 <!DOCTYPE html>
-<html lang="fi">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
@@ -25,13 +26,10 @@
   </header>
 
   <section id="hub">
-    <div id="hubCard">
+    <div id="hubCard" role="button" tabindex="0" aria-label="Scoreboard (double tap to open Quick Telemetry)">
       <div id="hubTop">
         <div id="hubTitle">Scoreboard</div>
-        <div id="hubLive">
-          <span class="dot"></span>
-          <span>LIVE</span>
-        </div>
+        <div id="hubLive"><span class="dot"></span><span>LIVE</span></div>
       </div>
 
       <div id="hubStats">
@@ -49,68 +47,61 @@
         </div>
       </div>
 
+      <div id="hubChartWrap">
+        <canvas id="hubChart" width="820" height="220"></canvas>
+        <div id="hubLegend">
+          <span class="legendItem"><i class="dotLegend"></i>Actual</span>
+          <span class="legendItem"><i class="holoLegend"></i>Prediction</span>
+        </div>
+      </div>
+
       <div id="hubSub">
-        <span id="hubSubtitle">Valitse kortit Librarystä. Double tap = lisää / done. Long press = remove.</span>
+        <span id="hubSubtitle">Double tap scoreboard = Quick Telemetry. Double tap cards = add/done. Long press = remove.</span>
       </div>
     </div>
   </section>
 
   <main id="views">
-
     <section id="view-home" class="view active">
       <div class="sectionHead">
         <div class="sectionTitle">Today’s Deck</div>
         <div class="sectionMeta">
           <span id="todayLabel">—</span>
           <span id="todayCount">0 cards</span>
+          <span id="todayScore">Score 0</span>
         </div>
       </div>
 
-      <div class="railWrap">
-        <div class="rail" id="activeRail"></div>
-      </div>
+      <div class="railWrap"><div class="rail" id="activeRail"></div></div>
 
-      <div class="empty" id="homeEmpty">
-        Lisää 1–3 korttia Librarystä. Pidä pakka kevyt.
-      </div>
+      <div class="empty" id="homeEmpty">Pick 1–3 cards from Library. Keep the deck light.</div>
 
       <div class="hint">
-        <span class="pill">Double tap</span> done • <span class="pill">Long press</span> remove • <span class="pill">Finalize</span> lukitsee päivän
+        <span class="pill">Double tap</span> done • <span class="pill">Long press</span> remove • <span class="pill">Finalize</span> locks the day
       </div>
     </section>
 
     <section id="view-library" class="view">
       <div class="sectionHead">
         <div class="sectionTitle">Library</div>
-        <div class="sectionMeta">
-          <span class="pill">Double tap</span> Add to Today
-        </div>
+        <div class="sectionMeta"><span class="pill">Double tap</span> Add to Today</div>
       </div>
-
       <div id="librarySections"></div>
     </section>
 
     <section id="view-gold" class="view">
       <div class="sectionHead">
         <div class="sectionTitle">Gold Cards</div>
-        <div class="sectionMeta">
-          <span id="goldCount">0</span>
-          <span>unlocked</span>
-        </div>
+        <div class="sectionMeta"><span id="goldCount">0</span> <span>unlocked</span></div>
       </div>
-
-      <div class="railWrap">
-        <div class="rail" id="goldRail"></div>
-      </div>
-
-      <div class="empty" id="goldEmpty">
-        Ei vielä Gold-kortteja. Toistuva valinta rakentaa identiteetin.
-      </div>
+      <div class="railWrap"><div class="rail" id="goldRail"></div></div>
+      <div class="empty" id="goldEmpty">No gold yet. Repeated choice builds identity.</div>
     </section>
 
     <section id="view-telemetry" class="view">
       <div class="telemetryCard">
         <div class="sectionTitle">Telemetry</div>
+
         <div class="telemetryGrid">
           <div class="tField">
             <label>Energy</label>
@@ -155,17 +146,55 @@
 
         <div class="tNotes">
           <label>Notes</label>
-          <textarea id="notes" rows="4" placeholder="Lyhyt merkintä…"></textarea>
+          <textarea id="notes" rows="4" placeholder="Short note…"></textarea>
         </div>
 
         <div class="telemetryFoot">
           <button id="exportBtn" class="ghost">Export JSON</button>
-          <div class="tiny" id="telemetryHint">Monte Carlo + Bayes päivittyy finalize jälkeen (ja hubissa livenä).</div>
+          <div class="tiny">Quick Telemetry: double tap Scoreboard (Home).</div>
         </div>
       </div>
     </section>
-
   </main>
+
+  <nav id="bottomBar" aria-label="Bottom navigation">
+    <button class="btab active" data-view="home">Home</button>
+    <button class="btab" data-view="library">Library</button>
+    <button class="btab" data-view="gold">Gold</button>
+    <button class="btab" data-view="telemetry">Telemetry</button>
+  </nav>
+
+  <button id="fabFinalize" aria-label="Finalize day">Finalize</button>
+
+  <div id="quickTelemetry" class="qt hidden" role="dialog" aria-modal="true">
+    <div id="qtBackdrop" class="qt-backdrop"></div>
+    <div id="qtSheet" class="qt-sheet">
+      <div class="qt-grab"></div>
+      <div class="qt-title">Quick Telemetry</div>
+
+      <div class="qt-row">
+        <div class="qt-k">Energy</div>
+        <input id="qtEnergy" type="range" min="1" max="10" value="5" />
+        <div class="qt-v" id="qtEnergyV">5</div>
+      </div>
+
+      <div class="qt-row">
+        <div class="qt-k">Stress</div>
+        <input id="qtStress" type="range" min="1" max="10" value="5" />
+        <div class="qt-v" id="qtStressV">5</div>
+      </div>
+
+      <div class="qt-row">
+        <div class="qt-k">Mood</div>
+        <input id="qtMood" type="range" min="1" max="10" value="5" />
+        <div class="qt-v" id="qtMoodV">5</div>
+      </div>
+
+      <div class="qt-foot">
+        <button id="qtClose" class="ghost">Close</button>
+      </div>
+    </div>
+  </div>
 
   <div id="toast" class="toast"></div>
 
