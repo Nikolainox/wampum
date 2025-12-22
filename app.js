@@ -1,107 +1,181 @@
 // app.js
-const STORAGE_KEY = "life_deck_v4_timeblocks";
-const VERSION = 4;
-
-const GOLD_STREAK = 7;
-const GOLD_TOTAL = 14;
+const KEY = "spatial_peak_v1";
+const VERSION = 1;
 
 const DOUBLE_TAP_MS = 260;
 const LONG_PRESS_MS = 520;
 
-const MC_RUNS = 500;
-const LOOKBACK_DAYS = 30;
-const PRED_DAYS = 7;
+const MIN_HAND = 3;
+const MAX_HAND = 5;
 
-let app = { version: VERSION, days: [], today: null };
+const LOOKBACK = 60;
+const MC_RUNS = 700;
 
-const TIMEBLOCKS = [
-  { id:"morning", title:"Morning", habits:[
-    ["Water + salt",2],["Sunlight 5–10 min",3],["No phone 30 min",5],["Breathing 3 min",2],["Walk 10 min",3],
-    ["Plan top task",4],["Cold face / splash",2],["Protein breakfast",3],["Coffee after 60 min",2],["Gratitude x3",2],
-    ["Journal 3 lines",3],["Mobility 5 min",3],["Make bed",1],["One hard choice",4],["Silence 2 min",2]
-  ]},
-  { id:"midday", title:"Midday", habits:[
-    ["Single focus 20 min",5],["Single focus 45 min",7],["Walk 10 min",3],["Stretch 3 min",2],["Hydration",2],
-    ["Whole meal",4],["No doomscroll",5],["Inbox 5 min",3],["Posture reset",2],["Micro-breaks",2],
-    ["Deep work 30 min",7],["Skill practice 20 min",6],["Sunlight break",3],["Breathing reset",2],["Say no once",4]
-  ]},
-  { id:"day", title:"Day", habits:[
-    ["Strength 20 min",8],["Zone2 20 min",7],["Core 10 min",5],["Project push 45 min",8],["Ship something",9],
-    ["Build asset",8],["Network ping",4],["No complaining",4],["Delayed dopamine",6],["No multitask",5],
-    ["Finish one task",6],["Hard thing 1 min start",5],["Keep promise",6],["Clean space 10 min",4],["Nature 10 min",4]
-  ]},
-  { id:"evening", title:"Evening", habits:[
-    ["Slow evening",5],["No screen 30 min",7],["Light walk",3],["Stretch evening",4],["Hot shower",3],
-    ["Tea ritual",2],["Plan tomorrow 3 min",4],["Journal 10 min",6],["Read fiction",4],["Calm music",3],
-    ["Body scan 5 min",4],["Breathing box 3 min",3],["Gratitude person",3],["Warm light only",2],["Tidy 3 min",2]
-  ]},
-  { id:"night", title:"Night", habits:[
-    ["Sleep routine",8],["Early bedtime",9],["No late screen",7],["Breathing before sleep",4],["NSDR 10 min",6],
-    ["Body scan 15 min",7],["Noise off",3],["Dark room",3],["Cool room",3],["Tomorrow setup",4],
-    ["Compassion",3],["Do nothing 10 min",4],["No caffeine after 14:00",5],["No sugar late",5],["Sleep 7h+",9]
-  ]}
+const TRACKS = ["focus","food","habit","train","sleep"];
+const COLORS = {
+  focus:"rgba(17,24,39,0.95)",
+  food:"rgba(249,115,22,0.95)",
+  habit:"rgba(139,92,246,0.95)",
+  train:"rgba(34,197,94,0.95)",
+  sleep:"rgba(14,165,233,0.95)"
+};
+
+const BLOCKS = [
+  {id:"morning", title:"Morning"},
+  {id:"midday", title:"Midday"},
+  {id:"day", title:"Day"},
+  {id:"evening", title:"Evening"},
+  {id:"night", title:"Night"}
 ];
 
+function clamp(x,a,b){ return Math.max(a, Math.min(b, x)); }
+function clampInt(x,a,b){ return Math.round(clamp(Number(x||0),a,b)); }
+function isoToday(){ return new Date().toISOString().slice(0,10); }
+function safeParse(s){ try{return JSON.parse(s);}catch{return null;} }
+function $(id){ return document.getElementById(id); }
+function $all(sel){ return [...document.querySelectorAll(sel)]; }
+function esc(s){ return String(s).replace(/[&<>"']/g,m=>({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[m])); }
+
+const LIB = [
+  mk("morning","Meditation 5 min",{cost:1,pot:4,tags:["focus","habit"],relBase:0.62}),
+  mk("morning","Breathing 3 min",{cost:1,pot:2,tags:["focus","habit"],relBase:0.70}),
+  mk("morning","Sunlight 10 min",{cost:1,pot:3,tags:["habit","sleep"],relBase:0.66}),
+  mk("morning","No phone 30 min",{cost:2,pot:5,tags:["focus","habit"],relBase:0.58}),
+  mk("morning","Protein breakfast",{cost:2,pot:4,tags:["food","habit"],relBase:0.60}),
+  mk("morning","Water + salt",{cost:1,pot:2,tags:["food","habit"],relBase:0.72}),
+  mk("morning","Walk 10 min",{cost:2,pot:3,tags:["train","habit"],relBase:0.60}),
+  mk("morning","Plan top task",{cost:2,pot:5,tags:["focus","habit"],relBase:0.55}),
+
+  mk("midday","Single focus 20 min",{cost:3,pot:6,tags:["focus"],relBase:0.52}),
+  mk("midday","Whole meal",{cost:2,pot:5,tags:["food"],relBase:0.62}),
+  mk("midday","No doomscroll",{cost:2,pot:6,tags:["focus","habit"],relBase:0.55}),
+  mk("midday","Stretch 3 min",{cost:1,pot:2,tags:["train","habit"],relBase:0.70}),
+  mk("midday","Hydration",{cost:1,pot:2,tags:["food"],relBase:0.72}),
+  mk("midday","Skill practice 20 min",{cost:4,pot:7,tags:["focus"],relBase:0.46}),
+
+  mk("day","Strength 20 min",{cost:6,pot:9,tags:["train"],relBase:0.35}),
+  mk("day","Zone2 20 min",{cost:5,pot:8,tags:["train"],relBase:0.40}),
+  mk("day","Ship something",{cost:6,pot:10,tags:["focus"],relBase:0.32}),
+  mk("day","Project push 45 min",{cost:6,pot:9,tags:["focus"],relBase:0.35}),
+  mk("day","No multitask",{cost:2,pot:5,tags:["focus","habit"],relBase:0.58}),
+
+  mk("evening","No screen 30 min",{cost:3,pot:8,tags:["sleep","habit"],relBase:0.44}),
+  mk("evening","Plan tomorrow 3 min",{cost:2,pot:6,tags:["focus","habit"],relBase:0.56}),
+  mk("evening","Body scan 5 min",{cost:2,pot:6,tags:["sleep","focus"],relBase:0.52}),
+  mk("evening","Light walk",{cost:2,pot:3,tags:["train","sleep"],relBase:0.62}),
+
+  mk("night","Sleep routine",{cost:3,pot:9,tags:["sleep","habit"],relBase:0.42}),
+  mk("night","Early bedtime",{cost:4,pot:10,tags:["sleep"],relBase:0.34}),
+  mk("night","NSDR 10 min",{cost:2,pot:7,tags:["sleep","focus"],relBase:0.50}),
+  mk("night","No caffeine after 14:00",{cost:2,pot:6,tags:["sleep","food"],relBase:0.58})
+];
+
+function mk(block,name,meta){
+  return {
+    id:`${block}:${name}`, block, name,
+    cost: clampInt(meta.cost,1,10),
+    pot: clampInt(meta.pot,1,12),
+    tags: Array.isArray(meta.tags)? meta.tags.slice(0):[],
+    relBase: typeof meta.relBase==="number"? clamp(meta.relBase,0.05,0.95):0.5
+  };
+}
+function card(id){ return LIB.find(c=>c.id===id) || null; }
+
+let app = {
+  version: VERSION,
+  days: [],
+  calendar: { year:null, month:null },
+  ui: { selectedDay:null }
+};
+
 function toast(msg){
-  const el = document.getElementById("toast");
-  if(!el) return;
+  const el = $("toast");
   el.textContent = msg;
   el.style.display = "block";
   clearTimeout(toast._t);
-  toast._t = setTimeout(()=>el.style.display="none", 1400);
+  toast._t = setTimeout(()=> el.style.display="none", 1400);
 }
 
-function todayISO(){ return new Date().toISOString().slice(0,10); }
-function safeParse(raw){ try{return JSON.parse(raw);}catch{return null;} }
-
-function save(){ try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(app)); }catch{} }
+function save(){ try{ localStorage.setItem(KEY, JSON.stringify(app)); }catch{} }
 function load(){
-  const raw = localStorage.getItem(STORAGE_KEY);
+  const raw = localStorage.getItem(KEY);
   if(!raw) return;
-  const parsed = safeParse(raw);
-  if(!parsed || typeof parsed !== "object") return;
-  if(!Array.isArray(parsed.days)) parsed.days = [];
-  parsed.version = VERSION;
-  app = parsed;
+  const p = safeParse(raw);
+  if(!p || typeof p!=="object") return;
+  if(!Array.isArray(p.days)) p.days = [];
+  if(!p.calendar) p.calendar = {};
+  if(!p.ui) p.ui = {};
+  p.version = VERSION;
+  app = p;
 }
 
 function ensureToday(){
-  const d = todayISO();
+  const d = isoToday();
   let day = app.days.find(x=>x.date===d);
   if(!day){
     day = {
-      date:d, finalized:false,
+      date:d,
+      finalized:false,
+      revealed:false,
       telemetry:{ energy:5, stress:5, mood:5, motivation:5, difficulty:5, sleep:"ok" },
       notes:"",
-      active:[],
+      hand:[],
       done:{},
       selectedCount:{},
       history:[],
+      score:0,
+      lines:null,
       summary:null,
-      score:0
+      coach:null
     };
     app.days.push(day);
   }
-  if(!Array.isArray(day.active)) day.active = [];
-  if(!day.done || typeof day.done !== "object") day.done = {};
-  if(!day.selectedCount || typeof day.selectedCount !== "object") day.selectedCount = {};
-  if(!Array.isArray(day.history)) day.history = [];
-  if(!day.telemetry) day.telemetry = { energy:5, stress:5, mood:5, motivation:5, difficulty:5, sleep:"ok" };
-  if(!("notes" in day)) day.notes = "";
-  if(!("score" in day)) day.score = 0;
+  normalize(day);
   app.today = day;
 }
 
-function habitKey(blockId, name){ return `${blockId}:${name}`; }
-function habitValueByKey(key){
-  const [bid, name] = key.split(":");
-  const block = TIMEBLOCKS.find(b=>b.id===bid);
-  if(!block) return 1;
-  const item = block.habits.find(h=>h[0]===name);
-  return item ? item[1] : 1;
+function normalize(day){
+  if(!day.telemetry) day.telemetry = { energy:5, stress:5, mood:5, motivation:5, difficulty:5, sleep:"ok" };
+  if(typeof day.notes!=="string") day.notes="";
+  if(!Array.isArray(day.hand)) day.hand=[];
+  if(!day.done || typeof day.done!=="object") day.done={};
+  if(!day.selectedCount || typeof day.selectedCount!=="object") day.selectedCount={};
+  if(!Array.isArray(day.history)) day.history=[];
+  if(typeof day.score!=="number") day.score=0;
+  if(!("finalized" in day)) day.finalized=false;
+  if(!("revealed" in day)) day.revealed=false;
 }
 
-function band(val, edges){ for(let i=0;i<edges.length;i++) if(val<=edges[i]) return i; return edges.length; }
+function setCalDefault(){
+  const now = new Date();
+  if(typeof app.calendar.year!=="number") app.calendar.year = now.getFullYear();
+  if(typeof app.calendar.month!=="number") app.calendar.month = now.getMonth();
+}
+
+function switchView(v){
+  $all(".view").forEach(x=>x.classList.remove("active"));
+  const el = $(`view-${v}`);
+  if(el) el.classList.add("active");
+
+  $all(".tab").forEach(t=>t.classList.remove("active"));
+  const btn = document.querySelector(`.tab[data-view="${v}"]`);
+  if(btn) btn.classList.add("active");
+  save();
+}
+
+function bindNav(){
+  $all(".tab").forEach(btn=>{
+    btn.addEventListener("click", ()=> switchView(btn.dataset.view));
+  });
+}
+
+function ctxNow(){
+  const t = app.today.telemetry;
+  const doneCount = app.today.hand.filter(id=>!!app.today.done[id]).length;
+  const doneRatio = app.today.hand.length ? doneCount/app.today.hand.length : 0;
+  const readiness = computeReadiness(t, doneRatio);
+  return { readiness, stress: t.stress ?? 5, energy: t.energy ?? 5 };
+}
 
 function computeReadiness(t, doneRatio){
   const base = (t.energy + (11 - t.stress) + t.mood + t.motivation) / 40;
@@ -110,71 +184,83 @@ function computeReadiness(t, doneRatio){
   else if(t.sleep==="bad") sleepAdj = -0.12;
   const diffPenalty = (t.difficulty - 5)/25;
   const habitBonus = (doneRatio || 0) * 0.15;
-  return Math.round(Math.max(0, Math.min(1, base + sleepAdj - diffPenalty + habitBonus)) * 100);
+  return Math.round(clamp(base + sleepAdj - diffPenalty + habitBonus, 0, 1) * 100);
 }
 
-function computeMomentum(readiness, doneCount, activeCount){
-  const ratio = activeCount ? doneCount/activeCount : 0;
+function computeMomentum(readiness, doneCount, handCount){
+  const ratio = handCount ? doneCount/handCount : 0;
   const quality = 0.7 + (readiness/100)*0.6;
-  return Math.round(Math.max(0, Math.min(100, (ratio*100)*quality)));
+  return Math.round(clamp((ratio*100)*quality, 0, 100));
 }
 
-function getLookbackDays(refDate, n){
+function getLookback(refDate, n){
   const sorted = [...app.days].sort((a,b)=>a.date<b.date?-1:1);
   const idx = sorted.findIndex(x=>x.date===refDate);
   const slice = idx>=0 ? sorted.slice(Math.max(0, idx-n), idx) : sorted.slice(Math.max(0, sorted.length-n));
   return slice.filter(d=>d.finalized);
 }
 
-function overallProbDone(habitKey){
-  const look = getLookbackDays(app.today.date, LOOKBACK_DAYS);
-  let trials=0, success=0;
-  for(const d of look){
-    const sel = d.selectedCount?.[habitKey] ? 1 : 0;
-    if(!sel) continue;
-    trials++;
-    if(d.history?.some(x=>x.k===habitKey && x.done)) success++;
-  }
-  const alpha=1, beta=1;
-  return (success+alpha)/(trials+alpha+beta);
+function band(val, edges){
+  for(let i=0;i<edges.length;i++) if(val<=edges[i]) return i;
+  return edges.length;
 }
 
-function bayesProbDone(habitKey, ctx){
-  const look = getLookbackDays(app.today.date, LOOKBACK_DAYS);
+function overallProbDone(id){
+  const look = getLookback(app.today.date, LOOKBACK);
+  let trials=0, success=0;
+  for(const d of look){
+    const sel = d.selectedCount?.[id] ? 1 : 0;
+    if(!sel) continue;
+    trials++;
+    if(d.history?.some(x=>x.id===id && x.done)) success++;
+  }
+  const a=1,b=1;
+  return (success+a)/(trials+a+b);
+}
+
+function bayesProbDone(id, ctx){
+  const look = getLookback(app.today.date, LOOKBACK);
   let trials=0, success=0;
 
-  const rb = band(ctx.readiness, [35,50,65,80]);
-  const sb = band(ctx.stress, [3,5,7,9]);
-  const eb = band(ctx.energy, [3,5,7,9]);
+  const rb = band(ctx.readiness,[35,50,65,80]);
+  const sb = band(ctx.stress,[3,5,7,9]);
+  const eb = band(ctx.energy,[3,5,7,9]);
 
   for(const d of look){
     const r = d.summary?.readiness ?? 50;
     const t = d.telemetry || {};
-    const rb2 = band(r, [35,50,65,80]);
-    const sb2 = band(t.stress ?? 5, [3,5,7,9]);
-    const eb2 = band(t.energy ?? 5, [3,5,7,9]);
+    const rb2 = band(r,[35,50,65,80]);
+    const sb2 = band(t.stress ?? 5,[3,5,7,9]);
+    const eb2 = band(t.energy ?? 5,[3,5,7,9]);
     if(rb2!==rb || sb2!==sb || eb2!==eb) continue;
 
-    const sel = d.selectedCount?.[habitKey] ? 1 : 0;
+    const sel = d.selectedCount?.[id] ? 1 : 0;
     if(!sel) continue;
     trials++;
-    if(d.history?.some(x=>x.k===habitKey && x.done)) success++;
+    if(d.history?.some(x=>x.id===id && x.done)) success++;
   }
 
-  const alpha=1,beta=1;
-  const pCtx = (success+alpha)/(trials+alpha+beta);
-  const pAll = overallProbDone(habitKey);
+  const a=1,b=1;
+  const pCtx = (success+a)/(trials+a+b);
+  const pAll = overallProbDone(id);
   return 0.65*pCtx + 0.35*pAll;
 }
 
-function monteCarloTomorrow(keys, ctx){
-  if(!keys.length) return 0;
-  const threshold = Math.max(1, Math.ceil(keys.length*0.6));
+function expectedDoneRatio(hand, ctx){
+  if(!hand.length) return 0;
+  let sum=0;
+  for(const id of hand) sum += bayesProbDone(id, ctx);
+  return sum/hand.length;
+}
+
+function monteCarloTomorrow(hand, ctx){
+  if(!hand.length) return 0;
+  const threshold = Math.max(1, Math.ceil(hand.length*0.6));
   let wins=0;
   for(let i=0;i<MC_RUNS;i++){
     let done=0;
-    for(const k of keys){
-      const p = bayesProbDone(k, ctx);
+    for(const id of hand){
+      const p = bayesProbDone(id, ctx);
       if(Math.random() < p) done++;
     }
     if(done>=threshold) wins++;
@@ -182,72 +268,42 @@ function monteCarloTomorrow(keys, ctx){
   return Math.round((wins/MC_RUNS)*100);
 }
 
-function expectedDoneRatio(keys, ctx){
-  if(!keys.length) return 0;
-  let sum=0;
-  for(const k of keys) sum += bayesProbDone(k, ctx);
-  return sum/keys.length;
-}
-
-function computeGoldSet(){
-  const totals = {};
-  const streak = {};
-  const gold = new Set();
-
-  const sorted = [...app.days].filter(d=>d.finalized).sort((a,b)=>a.date<b.date?-1:1);
-  for(const d of sorted){
-    const selectedKeys = Object.keys(d.selectedCount||{}).filter(k=>d.selectedCount[k]>0);
-    const selectedSet = new Set(selectedKeys);
-
-    for(const k of selectedKeys) totals[k] = (totals[k]||0) + 1;
-
-    for(const k of Object.keys(totals)){
-      if(selectedSet.has(k)) streak[k] = (streak[k]||0) + 1;
-      else streak[k] = 0;
-
-      if(streak[k] >= GOLD_STREAK || (totals[k]||0) >= GOLD_TOTAL) gold.add(k);
-    }
+function recalcScore(){
+  let s=0;
+  for(const id of app.today.hand){
+    const c = card(id);
+    if(c && app.today.done[id]) s += c.pot;
   }
-  return { gold, totals, streak };
+  app.today.score = s;
 }
 
-function setHub(readiness, momentum, tomorrowPct){
-  const r = document.getElementById("hubReadiness");
-  const m = document.getElementById("hubMomentum");
-  const t = document.getElementById("hubTomorrow");
-  if(r) r.textContent = `${readiness}%`;
-  if(m) m.textContent = `${momentum}`;
-  if(t) t.textContent = `${tomorrowPct}%`;
+function addToHand(id){
+  if(app.today.finalized) return;
+  if(app.today.hand.includes(id)) return;
+  if(app.today.hand.length >= MAX_HAND){ toast(`Max ${MAX_HAND}`); return; }
+  app.today.hand.push(id);
+  app.today.done[id] = false;
+  recalcScore();
+  renderAll();
 }
 
-function setTodayLabels(){
-  const d = app.today.date;
-  const tl = document.getElementById("todayLabel");
-  const tc = document.getElementById("todayCount");
-  const ts = document.getElementById("todayScore");
-  if(tl) tl.textContent = d;
-  if(tc) tc.textContent = `${app.today.active.length} cards`;
-  if(ts) ts.textContent = `Score ${app.today.score || 0}`;
+function removeFromHand(id){
+  if(app.today.finalized) return;
+  app.today.hand = app.today.hand.filter(x=>x!==id);
+  delete app.today.done[id];
+  recalcScore();
+  renderAll();
 }
 
-function makeCard({title, desc, metaL, metaR, done, gold}){
-  const el = document.createElement("div");
-  el.className = "card";
-  if(done) el.classList.add("done");
-  if(gold) el.classList.add("gold");
-
-  const t = document.createElement("div"); t.className="title"; t.textContent=title;
-  const d = document.createElement("div"); d.className="desc"; d.textContent=desc||"";
-  const m = document.createElement("div"); m.className="meta";
-  const ml = document.createElement("span"); ml.textContent=metaL||"";
-  const mr = document.createElement("span"); mr.textContent=metaR||"";
-  m.appendChild(ml); m.appendChild(mr);
-
-  el.appendChild(t); el.appendChild(d); el.appendChild(m);
-  return el;
+function toggleDone(id){
+  if(app.today.finalized) return;
+  if(!app.today.hand.includes(id)) return;
+  app.today.done[id] = !app.today.done[id];
+  recalcScore();
+  renderAll();
 }
 
-function attachTapHandlers(el, key, mode){
+function attachGestures(el, id, mode){
   let pressTimer=null;
   let longPressed=false;
 
@@ -256,10 +312,7 @@ function attachTapHandlers(el, key, mode){
     clearTimeout(pressTimer);
     pressTimer=setTimeout(()=>{
       longPressed=true;
-      if(mode==="active"){
-        removeFromToday(key);
-        toast("Removed");
-      }
+      if(mode==="hand"){ removeFromHand(id); toast("Removed"); }
     }, LONG_PRESS_MS);
   });
 
@@ -271,521 +324,875 @@ function attachTapHandlers(el, key, mode){
   el.addEventListener("click", ()=>{
     if(longPressed) return;
     const now=Date.now();
-    if(attachTapHandlers._lastKey===key && now-(attachTapHandlers._lastAt||0) <= DOUBLE_TAP_MS){
-      attachTapHandlers._lastKey=null;
-      attachTapHandlers._lastAt=0;
-      if(mode==="library"){ addToToday(key); toast("Added"); }
-      else if(mode==="active"){ toggleDone(key); }
+    if(attachGestures._lastId===id && now-(attachGestures._lastAt||0) <= DOUBLE_TAP_MS){
+      attachGestures._lastId=null;
+      attachGestures._lastAt=0;
+      if(mode==="lib"){ addToHand(id); toast("Added"); }
+      else if(mode==="hand"){ toggleDone(id); }
       return;
     }
-    attachTapHandlers._lastKey=key;
-    attachTapHandlers._lastAt=now;
+    attachGestures._lastId=id;
+    attachGestures._lastAt=now;
   });
 }
 
-function addToToday(key){
-  if(app.today.finalized) return;
-  if(!app.today.active.includes(key)){
-    app.today.active.push(key);
-    app.today.done[key]=false;
-    save();
-    renderAll();
-  }
-}
+function autoHand(){
+  const t = app.today.telemetry;
+  const ctx = { readiness: computeReadiness(t,0), stress: t.stress, energy: t.energy };
 
-function removeFromToday(key){
-  if(app.today.finalized) return;
-  app.today.active = app.today.active.filter(k=>k!==key);
-  delete app.today.done[key];
-  save();
+  const scored = LIB.map(c=>{
+    const p = bayesProbDone(c.id, ctx);
+    const reliability = clamp(0.3 + 0.7*p, 0, 1);
+    const costPenalty = c.cost/10;
+    const value = c.pot/12;
+    const util = (0.62*value + 0.38*reliability) - 0.45*costPenalty;
+    return { id:c.id, util };
+  }).sort((a,b)=>b.util-a.util);
+
+  const pick=[];
+  const used=new Set();
+  for(const s of scored){
+    const c = card(s.id);
+    if(!c) continue;
+    if(pick.length>=MAX_HAND) break;
+    if(used.has(c.block) && pick.length<MIN_HAND) continue;
+    pick.push(c.id);
+    used.add(c.block);
+  }
+  while(pick.length<MIN_HAND && scored[pick.length]) pick.push(scored[pick.length].id);
+
+  app.today.hand = [...new Set(pick)].slice(0,MAX_HAND);
+  app.today.done = {};
+  for(const id of app.today.hand) app.today.done[id]=false;
+  recalcScore();
   renderAll();
 }
 
-function toggleDone(key){
-  if(app.today.finalized) return;
-  if(!app.today.active.includes(key)) return;
-  const next = !app.today.done[key];
-  app.today.done[key] = next;
+function computeLines(dayLike){
+  const t = dayLike.telemetry || {};
+  const baseSleep = sleepBase(t.sleep);
+  const baseFocus = clampInt((t.energy*10) - (t.stress*4) + (t.mood*3), 0, 100);
+  const pts = BLOCKS.map(()=>({ sleep:baseSleep, focus:baseFocus, food:50, habit:40, train:45 }));
 
-  const v = habitValueByKey(key);
-  app.today.score = (app.today.score || 0) + (next ? v : -v);
+  const hist = dayLike.history || [];
+  for(const h of hist){
+    if(!h.done) continue;
+    const idx = BLOCKS.findIndex(b=>b.id===h.block);
+    if(idx<0) continue;
 
-  save();
-  renderAll();
-}
+    const impact = Math.round(h.pot * 2.4);
+    const decay  = Math.round(impact * 0.55);
 
-function finalizeDay(){
-  if(app.today.finalized) return;
-
-  const active=[...app.today.active];
-  const hist=[];
-  for(const k of active){
-    app.today.selectedCount[k] = (app.today.selectedCount[k]||0)+1;
-    const done=!!app.today.done[k];
-    hist.push({k,done, v: habitValueByKey(k)});
-  }
-  app.today.history=hist;
-
-  const doneCount = active.filter(k=>!!app.today.done[k]).length;
-  const doneRatio = active.length ? doneCount/active.length : 0;
-
-  const t = app.today.telemetry || {};
-  const readiness = computeReadiness(t, doneRatio);
-  const momentum = computeMomentum(readiness, doneCount, active.length);
-
-  app.today.summary = { readiness, momentum, doneCount, activeCount: active.length, score: app.today.score || 0 };
-  app.today.finalized = true;
-
-  app.today.active=[];
-  app.today.done={};
-
-  save();
-  toast("Finalized");
-  renderAll();
-}
-
-function exportJSON(){
-  const blob=new Blob([JSON.stringify(app,null,2)],{type:"application/json"});
-  const url=URL.createObjectURL(blob);
-  const a=document.createElement("a");
-  a.href=url; a.download="life_deck_data.json"; a.click();
-}
-
-function renderHome(goldSet){
-  const rail=document.getElementById("activeRail");
-  if(!rail) return;
-  rail.innerHTML="";
-
-  const active=app.today.active;
-  const empty=document.getElementById("homeEmpty");
-  if(empty) empty.style.display = active.length ? "none" : "block";
-
-  for(const key of active){
-    const name=key.split(":")[1];
-    const done=!!app.today.done[key];
-    const g=goldSet.has(key);
-    const val=habitValueByKey(key);
-
-    const card=makeCard({
-      title:name,
-      desc: done ? "Done today" : "Double tap to mark done",
-      metaL: g ? "Gold" : "Active",
-      metaR: `+${val}`,
-      done,
-      gold:g
-    });
-
-    attachTapHandlers(card, key, "active");
-    rail.appendChild(card);
-  }
-}
-
-function renderLibrary(goldSet){
-  const out=document.getElementById("librarySections");
-  if(!out) return;
-  out.innerHTML="";
-
-  for(const block of TIMEBLOCKS){
-    const head=document.createElement("div");
-    head.className="sectionTitle";
-    head.textContent=block.title;
-
-    const wrap=document.createElement("div");
-    wrap.className="railWrap";
-
-    const rail=document.createElement("div");
-    rail.className="rail";
-
-    for(const [name,val] of block.habits){
-      const key=habitKey(block.id, name);
-      const isGold=goldSet.has(key);
-
-      const card=makeCard({
-        title:name,
-        desc:"Double tap to add to Today",
-        metaL: isGold ? "Gold" : block.title,
-        metaR: `+${val}`,
-        gold:isGold
-      });
-
-      attachTapHandlers(card, key, "library");
-      rail.appendChild(card);
+    for(let i=idx;i<pts.length;i++){
+      const mult = i===idx ? 1 : (i===idx+1 ? 0.6 : 0.35);
+      const bump = Math.round(impact*mult);
+      if(h.tags.includes("focus")) pts[i].focus = clampInt(pts[i].focus + bump, 0, 100);
+      if(h.tags.includes("food"))  pts[i].food  = clampInt(pts[i].food  + bump, 0, 100);
+      if(h.tags.includes("habit")) pts[i].habit = clampInt(pts[i].habit + bump, 0, 100);
+      if(h.tags.includes("train")) pts[i].train = clampInt(pts[i].train + bump, 0, 100);
+      if(h.tags.includes("sleep")) pts[i].sleep = clampInt(pts[i].sleep + Math.round(decay*mult), 0, 100);
     }
-
-    wrap.appendChild(rail);
-    out.appendChild(head);
-    out.appendChild(wrap);
-  }
-}
-
-function renderGold(goldSet, totals, streak){
-  const rail=document.getElementById("goldRail");
-  if(!rail) return;
-  rail.innerHTML="";
-
-  const goldKeys=[...goldSet].sort((a,b)=>a<b?-1:1);
-  const gc=document.getElementById("goldCount");
-  if(gc) gc.textContent = `${goldKeys.length}`;
-
-  const empty=document.getElementById("goldEmpty");
-  if(empty) empty.style.display = goldKeys.length ? "none" : "block";
-
-  for(const key of goldKeys){
-    const name=key.split(":")[1];
-    const total=totals[key]||0;
-    const st=streak[key]||0;
-    const val=habitValueByKey(key);
-
-    const card=makeCard({
-      title:name,
-      desc:"Identity locked",
-      metaL:`Total ${total} • +${val}`,
-      metaR:`Streak ${st}`,
-      gold:true
-    });
-
-    rail.appendChild(card);
-  }
-}
-
-function renderTelemetry(){
-  const t=app.today.telemetry;
-
-  const fields=["energy","stress","mood","motivation","difficulty"];
-  for(const f of fields){
-    const input=document.querySelector(`input[data-field="${f}"]`);
-    if(input) input.value = t[f] ?? 5;
-    const label=document.getElementById(`${f}Label`);
-    if(label) label.textContent = `${t[f] ?? 5}/10`;
   }
 
-  const sel=document.querySelector(`select[data-field="sleep"]`);
-  if(sel) sel.value = t.sleep || "ok";
-  const sleepLabel=document.getElementById("sleepLabel");
-  if(sleepLabel) sleepLabel.textContent = (t.sleep || "ok").toUpperCase();
+  for(const id of (dayLike.hand||[])){
+    const c = card(id);
+    if(!c) continue;
+    if(c.tags.includes("focus") && c.pot>=7 && !dayLike.done?.[id]){
+      for(let i=2;i<pts.length;i++) pts[i].focus = clampInt(pts[i].focus - Math.round(c.pot*2.0), 0, 100);
+    }
+    if(c.tags.includes("sleep") && c.pot>=7 && !dayLike.done?.[id]){
+      pts[4].sleep = clampInt(pts[4].sleep - Math.round(c.pot*2.2), 0, 100);
+    }
+  }
 
-  const notes=document.getElementById("notes");
-  if(notes) notes.value = app.today.notes || "";
-
-  const qe=document.getElementById("qtEnergy");
-  const qs=document.getElementById("qtStress");
-  const qm=document.getElementById("qtMood");
-  if(qe) qe.value = t.energy ?? 5;
-  if(qs) qs.value = t.stress ?? 5;
-  if(qm) qm.value = t.mood ?? 5;
-  syncQuickTelemetryLabels();
+  return pts;
 }
 
-function syncQuickTelemetryLabels(){
-  const qe=document.getElementById("qtEnergy");
-  const qs=document.getElementById("qtStress");
-  const qm=document.getElementById("qtMood");
-  const qev=document.getElementById("qtEnergyV");
-  const qsv=document.getElementById("qtStressV");
-  const qmv=document.getElementById("qtMoodV");
-  if(qe && qev) qev.textContent = `${qe.value}`;
-  if(qs && qsv) qsv.textContent = `${qs.value}`;
-  if(qm && qmv) qmv.textContent = `${qm.value}`;
+function sleepBase(s){
+  if(s==="good") return 78;
+  if(s==="bad") return 42;
+  return 60;
 }
 
-function calcCtxFromNow(readiness){
-  const t=app.today.telemetry || {};
-  return { readiness, stress: t.stress ?? 5, energy: t.energy ?? 5 };
-}
-
-function drawHubChart(actual, predicted){
-  const canvas = document.getElementById("hubChart");
-  if(!canvas) return;
+function drawSpatialLines(actual, holo){
+  const canvas = $("linesCanvas");
   const ctx = canvas.getContext("2d");
-  const w = canvas.width, h = canvas.height;
-
+  const w=canvas.width, h=canvas.height;
   ctx.clearRect(0,0,w,h);
 
-  const padL=24, padR=18, padT=12, padB=22;
-  const iw = w - padL - padR;
-  const ih = h - padT - padB;
+  const padL=120, padR=24, padT=20, padB=22;
+  const iw=w-padL-padR, ih=h-padT-padB;
 
-  const minY = 0;
-  const maxY = 100;
+  const yAt = i => padT + (i/(BLOCKS.length-1))*ih;
+  const xAt = v => padL + (clamp(v,0,100)/100)*iw;
 
-  const nA = actual.length;
-  const nP = predicted.length;
-  const totalPoints = (nA>0 ? nA : 1) + (nP>0 ? nP : 0);
+  ctx.fillStyle="rgba(17,24,39,0.70)";
+  ctx.font="700 12px system-ui";
+  for(let i=0;i<BLOCKS.length;i++){
+    ctx.fillText(BLOCKS[i].title, 14, yAt(i)+4);
+    ctx.strokeStyle="rgba(17,24,39,0.07)";
+    ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(padL, yAt(i)); ctx.lineTo(padL+iw, yAt(i)); ctx.stroke();
+  }
 
-  const xAt = (i)=> padL + (totalPoints<=1?0:(i/(totalPoints-1))*iw);
-  const yAt = (v)=> padT + (1 - (Math.max(minY,Math.min(maxY,v))/maxY))*ih;
+  for(const k of TRACKS){
+    poly(actual,k,COLORS[k],false);
+    dots(actual,k,COLORS[k]);
+    if(holo) poly(holo,k,"rgba(59,130,246,0.35)",true);
+  }
 
-  ctx.strokeStyle = "rgba(17,24,39,0.10)";
-  ctx.lineWidth = 1;
+  function poly(lines,key,color,dashed){
+    if(!lines||lines.length<2) return;
+    ctx.save();
+    ctx.strokeStyle=color;
+    ctx.lineWidth=3;
+    if(dashed) ctx.setLineDash([10,8]);
+    ctx.beginPath();
+    for(let i=0;i<lines.length;i++){
+      const x=xAt(lines[i][key]);
+      const y=yAt(i);
+      if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+    }
+    ctx.stroke();
+    ctx.restore();
+  }
+  function dots(lines,key,color){
+    if(!lines) return;
+    ctx.save();
+    ctx.fillStyle=color;
+    for(let i=0;i<lines.length;i++){
+      ctx.beginPath();
+      ctx.arc(xAt(lines[i][key]), yAt(i), 3, 0, Math.PI*2);
+      ctx.fill();
+    }
+    ctx.restore();
+  }
+}
+
+function drawReadiness(actualSeries, predSeries){
+  const canvas = $("readinessCanvas");
+  const ctx = canvas.getContext("2d");
+  const w=canvas.width, h=canvas.height;
+  ctx.clearRect(0,0,w,h);
+
+  const padL=18,padR=18,padT=14,padB=18;
+  const iw=w-padL-padR, ih=h-padT-padB;
+
+  const all = actualSeries.concat(predSeries||[]);
+  const total = Math.max(2, all.length);
+  const xAt = i => padL + (i/(total-1))*iw;
+  const yAt = v => padT + (1 - (clamp(v,0,100)/100))*ih;
+
+  ctx.strokeStyle="rgba(17,24,39,0.08)";
+  ctx.lineWidth=1;
   for(let g=0; g<=4; g++){
     const y = padT + (g/4)*ih;
     ctx.beginPath(); ctx.moveTo(padL,y); ctx.lineTo(padL+iw,y); ctx.stroke();
   }
 
-  if(nA>0){
-    ctx.strokeStyle = "rgba(17,24,39,0.95)";
-    ctx.lineWidth = 3;
-    ctx.beginPath();
-    for(let i=0;i<nA;i++){
-      const x = xAt(i);
-      const y = yAt(actual[i]);
-      if(i===0) ctx.moveTo(x,y);
-      else ctx.lineTo(x,y);
-    }
-    ctx.stroke();
+  ctx.strokeStyle="rgba(17,24,39,0.95)";
+  ctx.lineWidth=3;
+  ctx.beginPath();
+  for(let i=0;i<actualSeries.length;i++){
+    const x=xAt(i), y=yAt(actualSeries[i]);
+    if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+  }
+  ctx.stroke();
 
-    ctx.fillStyle = "rgba(17,24,39,0.95)";
-    for(let i=0;i<nA;i++){
-      const x = xAt(i);
-      const y = yAt(actual[i]);
-      ctx.beginPath(); ctx.arc(x,y,3,0,Math.PI*2); ctx.fill();
-    }
+  ctx.fillStyle="rgba(17,24,39,0.95)";
+  for(let i=0;i<actualSeries.length;i++){
+    ctx.beginPath(); ctx.arc(xAt(i), yAt(actualSeries[i]), 3, 0, Math.PI*2); ctx.fill();
   }
 
-  if(nP>0){
-    const startIdx = Math.max(0, nA-1);
-    const baseIdx = startIdx;
-    const offset = baseIdx;
-
+  if(predSeries && predSeries.length){
     ctx.save();
     ctx.setLineDash([10,8]);
-    ctx.lineWidth = 4;
-    const grad = ctx.createLinearGradient(padL,0,padL+iw,0);
+    ctx.lineWidth=4;
+    const grad=ctx.createLinearGradient(padL,0,padL+iw,0);
     grad.addColorStop(0,"rgba(59,130,246,0.25)");
     grad.addColorStop(0.5,"rgba(59,130,246,0.95)");
     grad.addColorStop(1,"rgba(34,197,94,0.30)");
-    ctx.strokeStyle = grad;
+    ctx.strokeStyle=grad;
 
+    const offset = actualSeries.length-1;
     ctx.beginPath();
-    for(let j=0;j<nP;j++){
-      const idx = offset + 1 + j;
-      const x = xAt(idx);
-      const y = yAt(predicted[j]);
-      if(j===0) ctx.moveTo(x,y);
-      else ctx.lineTo(x,y);
+    for(let j=0;j<predSeries.length;j++){
+      const x=xAt(offset + j + 1), y=yAt(predSeries[j]);
+      if(j===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
     }
     ctx.stroke();
     ctx.restore();
   }
 }
 
-function buildPredictionSeries(goldSet, readinessNow){
-  const active = app.today.active;
-  const keys = active.length ? active : [...goldSet].slice(0, 6);
+function buildHoloLines(){
+  const t0 = app.today.telemetry;
+  const ctx0 = ctxNow();
+  const hand = app.today.hand.length ? app.today.hand : bestHand(ctx0).map(x=>x.id);
+  const exp = expectedDoneRatio(hand, ctx0);
 
-  if(!keys.length){
-    return Array(PRED_DAYS).fill(readinessNow);
+  const ghost = { telemetry:t0, hand, done:{}, history:[] };
+  for(const id of hand){
+    const c = card(id);
+    if(!c) continue;
+    const p = bayesProbDone(id, ctx0);
+    const done = p >= Math.max(0.45, exp*0.95);
+    ghost.done[id]=done;
+    ghost.history.push({ id, done, pot:c.pot, cost:c.cost, tags:c.tags, block:c.block });
   }
-
-  const t0 = app.today.telemetry || {};
-  const series = [];
-  let last = readinessNow;
-
-  for(let d=0; d<PRED_DAYS; d++){
-    const drift = (d===0?0: (Math.random()*2 - 1));
-    const t = {
-      ...t0,
-      energy: Math.max(1, Math.min(10, (t0.energy ?? 5) + drift*0.2)),
-      stress: Math.max(1, Math.min(10, (t0.stress ?? 5) - drift*0.15)),
-      mood: Math.max(1, Math.min(10, (t0.mood ?? 5) + drift*0.1)),
-      motivation: Math.max(1, Math.min(10, (t0.motivation ?? 5) + drift*0.1)),
-      difficulty: t0.difficulty ?? 5,
-      sleep: t0.sleep ?? "ok"
-    };
-
-    const ctx = { readiness: last, stress: t.stress, energy: t.energy };
-    const expRatio = expectedDoneRatio(keys, ctx);
-
-    const pred = computeReadiness(t, expRatio);
-    last = Math.round(0.65*last + 0.35*pred);
-    series.push(last);
-  }
-
-  return series;
+  return computeLines(ghost);
 }
 
-function updateScoreboardAndChart(goldSet){
-  const active=app.today.active;
-  const doneCount=active.filter(k=>!!app.today.done[k]).length;
-  const doneRatio=active.length ? doneCount/active.length : 0;
-
-  const t=app.today.telemetry;
-  const readiness=computeReadiness(t, doneRatio);
-  const momentum=computeMomentum(readiness, doneCount, active.length);
-
-  const ctx=calcCtxFromNow(readiness);
-  const keysForTomorrow = active.length ? active : [...goldSet].slice(0,6);
-  const tomorrowPct = monteCarloTomorrow(keysForTomorrow, ctx);
-
-  setHub(readiness, momentum, tomorrowPct);
-
-  const look = getLookbackDays(app.today.date, 60);
-  const actual = look.map(d => d.summary?.readiness ?? 50);
-  actual.push(readiness);
-
-  const predicted = buildPredictionSeries(goldSet, readiness);
-  const actualSlice = actual.slice(Math.max(0, actual.length-14));
-  drawHubChart(actualSlice, predicted);
+function bestHand(ctx){
+  return LIB.map(c=>{
+    const p = bayesProbDone(c.id, ctx);
+    const rel = clamp(0.3 + 0.7*p, 0, 1);
+    const util = (0.62*(c.pot/12) + 0.38*rel) - 0.45*(c.cost/10);
+    return { id:c.id, util, p };
+  }).sort((a,b)=>b.util-a.util).slice(0,5);
 }
 
-function renderAll(){
-  const {gold, totals, streak} = computeGoldSet();
-  setTodayLabels();
-  renderHome(gold);
-  renderLibrary(gold);
-  renderGold(gold, totals, streak);
-  renderTelemetry();
-  updateScoreboardAndChart(gold);
+function goldCard(id){
+  let comp=0, sel=0;
+  for(const d of app.days){
+    if(!d.finalized) continue;
+    sel += (d.selectedCount?.[id] || 0);
+    if(d.history?.some(x=>x.id===id && x.done)) comp++;
+  }
+  return comp>=7 || sel>=14;
+}
+
+function tagsLabel(tags){
+  const map={focus:"Focus",food:"Eating",habit:"Habits",train:"Workout",sleep:"Sleep"};
+  return (tags||[]).map(t=>map[t]||t).join(" · ") || "General";
+}
+
+function renderHome(){
+  $("todayLabel").textContent = app.today.date;
+  $("lockMeta").textContent = app.today.finalized ? "Locked" : "Unlocked";
+  $("handMeta").textContent = `${app.today.hand.length} cards`;
+
+  const t = app.today.telemetry;
+  $("bSleep").textContent = (t.sleep||"ok").toUpperCase();
+  $("bEnergy").textContent = `${t.energy ?? 5}`;
+  $("bStress").textContent = `${t.stress ?? 5}`;
+  $("bMood").textContent = `${t.mood ?? 5}`;
+
+  const rail = $("handRail");
+  rail.innerHTML = "";
+  $("handEmpty").style.display = app.today.hand.length ? "none" : "block";
+
+  const ctx = ctxNow();
+  for(const id of app.today.hand){
+    const c = card(id);
+    if(!c) continue;
+    const p = bayesProbDone(id, ctx);
+    const rel = Math.round(p*100);
+    const done = !!app.today.done[id];
+
+    const el = document.createElement("div");
+    el.className = "card";
+    if(done) el.classList.add("done");
+    if(goldCard(id)) el.classList.add("gold");
+
+    el.innerHTML = `
+      <div class="ctop">
+        <div class="ctitle">${esc(c.name)}</div>
+        <div class="badges">
+          <span class="badge cost">Cost ${c.cost}</span>
+          <span class="badge pot">Pot +${c.pot}</span>
+          <span class="badge rel">Rel ${rel}%</span>
+        </div>
+      </div>
+      <div class="cdesc">${esc(c.block.toUpperCase())} · ${esc(tagsLabel(c.tags))}</div>
+      <div class="cmeta"><span>${done ? "DONE" : "Double tap = DONE"}</span><span>${done ? "✓" : "•"}</span></div>
+    `;
+
+    attachGestures(el, id, "hand");
+    rail.appendChild(el);
+  }
+
+  // AI leverage lines
+  const { leverage, remove } = computeTwoIdeas();
+  $("aiLeverage").textContent = leverage;
+  $("aiRemove").textContent = remove;
+
+  if(app.today.coach) $("aiCoach").textContent = app.today.coach;
+}
+
+function computeTwoIdeas(){
+  const done=[], missed=[];
+  for(const id of app.today.hand){
+    const c = card(id);
+    if(!c) continue;
+    (app.today.done[id] ? done : missed).push(c);
+  }
+  done.sort((a,b)=>b.pot-a.pot);
+  missed.sort((a,b)=>b.cost-a.cost);
+
+  const leverage = done.length ? `${done[0].name} (Pot +${done[0].pot})` : "Finish one card first.";
+  const remove = missed.length ? `${missed[0].name} (Cost ${missed[0].cost})` : "No obvious removals today.";
+  return { leverage, remove };
+}
+
+function renderTelemetry(){
+  const t = app.today.telemetry;
+  const fields=["energy","stress","mood","motivation","difficulty"];
+  for(const f of fields){
+    const input = document.querySelector(`input[data-field="${f}"]`);
+    if(input) input.value = t[f] ?? 5;
+    const label = $(`${f}Label`);
+    if(label) label.textContent = `${t[f] ?? 5}/10`;
+  }
+  const sel = document.querySelector(`select[data-field="sleep"]`);
+  if(sel) sel.value = t.sleep || "ok";
+  $("sleepLabel").textContent = (t.sleep||"ok").toUpperCase();
+  $("notes").value = app.today.notes || "";
+
+  $("qtEnergy").value = t.energy ?? 5;
+  $("qtStress").value = t.stress ?? 5;
+  $("qtMood").value = t.mood ?? 5;
+  syncQT();
+}
+
+function renderLibrary(){
+  const q = ($("search").value || "").trim().toLowerCase();
+  const out = $("library");
+  out.innerHTML = "";
+
+  for(const b of BLOCKS){
+    const head = document.createElement("div");
+    head.className="sectionHead";
+    head.innerHTML = `<div class="sectionTitle">${b.title}</div><div class="sectionMeta"><span class="pill">Double tap to add</span></div>`;
+    out.appendChild(head);
+
+    const wrap = document.createElement("div");
+    wrap.className="railWrap";
+    const rail = document.createElement("div");
+    rail.className="rail";
+
+    const ctx = ctxNow();
+    const list = LIB.filter(c=>c.block===b.id).filter(c=>{
+      if(!q) return true;
+      return c.name.toLowerCase().includes(q) || c.tags.join(" ").toLowerCase().includes(q);
+    });
+
+    for(const c of list){
+      const p = bayesProbDone(c.id, ctx);
+      const rel = Math.round(p*100);
+
+      const el = document.createElement("div");
+      el.className="card";
+      if(goldCard(c.id)) el.classList.add("gold");
+
+      el.innerHTML = `
+        <div class="ctop">
+          <div class="ctitle">${esc(c.name)}</div>
+          <div class="badges">
+            <span class="badge cost">Cost ${c.cost}</span>
+            <span class="badge pot">Pot +${c.pot}</span>
+            <span class="badge rel">Rel ${rel}%</span>
+          </div>
+        </div>
+        <div class="cdesc">${esc(tagsLabel(c.tags))}</div>
+        <div class="cmeta"><span>Double tap to ADD</span><span>${app.today.hand.includes(c.id) ? "In hand" : ""}</span></div>
+      `;
+      attachGestures(el, c.id, "lib");
+      rail.appendChild(el);
+    }
+
+    wrap.appendChild(rail);
+    out.appendChild(wrap);
+  }
+}
+
+function monthLabel(y,m){
+  return new Date(y,m,1).toLocaleString(undefined,{month:"long",year:"numeric"});
+}
+
+function renderCalendar(){
+  const grid = $("calGrid");
+  grid.innerHTML = "";
+
+  const y=app.calendar.year, m=app.calendar.month;
+  $("monthLabel").textContent = monthLabel(y,m);
+
+  const first = new Date(y,m,1);
+  const startDow = first.getDay();
+  const dim = new Date(y,m+1,0).getDate();
+  const today = isoToday();
+
+  for(let i=0;i<startDow;i++){
+    const blank = document.createElement("div");
+    blank.className="cell";
+    blank.style.visibility="hidden";
+    grid.appendChild(blank);
+  }
+
+  for(let d=1; d<=dim; d++){
+    const iso = new Date(y,m,d).toISOString().slice(0,10);
+    const day = app.days.find(x=>x.date===iso);
+    const finalized = !!day?.finalized;
+    const doneCount = day?.summary?.doneCount ?? (day?.history?.filter(h=>h.done).length || 0);
+    const handCount = day?.summary?.handCount ?? (day?.hand?.length || 0);
+    const readiness = day?.summary?.readiness ?? null;
+    const pct = handCount ? Math.round((doneCount/handCount)*100) : 0;
+
+    const cell = document.createElement("div");
+    cell.className="cell";
+    if(iso===today) cell.classList.add("today");
+    if(finalized) cell.classList.add("final");
+
+    cell.innerHTML = `
+      <div class="d">${d}</div>
+      <div class="m">${finalized ? `Done ${doneCount}/${handCount}` : (handCount?`Hand ${handCount}`:"—")}</div>
+      <div class="bar"><i style="width:${pct}%"></i></div>
+      <div class="m">${readiness!=null ? `R ${readiness}%` : ""}</div>
+    `;
+    cell.addEventListener("click", ()=> inspectDay(iso));
+    grid.appendChild(cell);
+  }
+}
+
+function inspectDay(iso){
+  app.ui.selectedDay = iso;
+  const day = app.days.find(x=>x.date===iso);
+
+  $("iTitle").textContent = iso;
+  if(!day){
+    $("iMeta").textContent = "No data";
+    $("iRail").innerHTML = "";
+    $("iNotes").textContent = "—";
+    save();
+    return;
+  }
+
+  const meta = day.finalized
+    ? `Final · Score ${day.score||0} · Readiness ${day.summary?.readiness ?? "—"}%`
+    : "Not finalized";
+  $("iMeta").textContent = meta;
+  $("iNotes").textContent = day.notes || "—";
+
+  const rail = $("iRail");
+  rail.innerHTML = "";
+
+  const items = (day.history && day.history.length)
+    ? day.history
+    : (day.hand||[]).map(id=>({id,done:!!day.done?.[id]}));
+
+  for(const it of items){
+    const c = card(it.id);
+    if(!c) continue;
+    const el = document.createElement("div");
+    el.className="card";
+    if(it.done) el.classList.add("done");
+    el.innerHTML = `
+      <div class="ctop">
+        <div class="ctitle">${esc(c.name)}</div>
+        <div class="badges">
+          <span class="badge pot">Pot +${c.pot}</span>
+          <span class="badge cost">Cost ${c.cost}</span>
+        </div>
+      </div>
+      <div class="cdesc">${esc(c.block.toUpperCase())} · ${esc(tagsLabel(c.tags))}</div>
+      <div class="cmeta"><span>${it.done ? "DONE" : "MISSED"}</span><span>${it.done ? "✓" : "×"}</span></div>
+    `;
+    rail.appendChild(el);
+  }
+
   save();
 }
 
-function switchView(id){
-  document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
-  document.querySelectorAll(".btab").forEach(t=>t.classList.remove("active"));
-  document.querySelectorAll(".view").forEach(v=>v.classList.remove("active"));
+function renderInsights(){
+  const look = getLookback(app.today.date, LOOKBACK);
 
-  const btn=document.querySelector(`.tab[data-view="${id}"]`);
-  if(btn) btn.classList.add("active");
-  const bbtn=document.querySelector(`.btab[data-view="${id}"]`);
-  if(bbtn) bbtn.classList.add("active");
+  const stats = {};
+  for(const d of look){
+    for(const h of (d.history||[])){
+      if(!stats[h.id]) stats[h.id] = { sel:0, done:0, pot:0, cost:0 };
+      stats[h.id].sel++;
+      if(h.done){
+        stats[h.id].done++;
+        stats[h.id].pot += h.pot||0;
+        stats[h.id].cost += h.cost||0;
+      }
+    }
+  }
 
-  const view=document.getElementById(`view-${id}`);
-  if(view) view.classList.add("active");
+  const ranked = Object.entries(stats).map(([id,s])=>{
+    const doneRate = s.sel ? s.done/s.sel : 0;
+    const eff = (s.cost>0) ? (s.pot/s.cost) : s.pot;
+    const score = 0.55*eff + 0.45*doneRate;
+    return { id, score, doneRate, eff };
+  }).sort((a,b)=>b.score-a.score);
+
+  const top = ranked.slice(0,3).map(r=>{
+    const c=card(r.id); if(!c) return null;
+    return `${c.name} (eff ${r.eff.toFixed(2)}, done ${Math.round(r.doneRate*100)}%)`;
+  }).filter(Boolean);
+
+  const low = ranked.slice(-3).reverse().map(r=>{
+    const c=card(r.id); if(!c) return null;
+    return `${c.name} (eff ${r.eff.toFixed(2)}, done ${Math.round(r.doneRate*100)}%)`;
+  }).filter(Boolean);
+
+  $("insWorked").textContent = `Worked: ${top.join(" · ") || "—"}\nDidn’t: ${low.join(" · ") || "—"}`;
+
+  const medId = "morning:Meditation 5 min";
+  let withM=[], withoutM=[];
+  for(const d of look){
+    const had = d.history?.some(x=>x.id===medId && x.done);
+    const lines = d.lines;
+    if(!lines || lines.length<5) continue;
+    const avgFocus = Math.round(lines.reduce((a,p)=>a+p.focus,0)/lines.length);
+    (had ? withM : withoutM).push(avgFocus);
+  }
+  const avg = arr => arr.length ? Math.round(arr.reduce((a,b)=>a+b,0)/arr.length) : null;
+  const aW=avg(withM), aN=avg(withoutM);
+  if(aW!=null && aN!=null){
+    const delta = aW-aN;
+    $("insCounter").textContent = `Meditation effect (Focus avg): with ${aW} vs without ${aN} (Δ ${delta>=0?"+":""}${delta}).`;
+  }else{
+    $("insCounter").textContent = "Collect ~10 finalized days for counterfactuals.";
+  }
+
+  const ctx = ctxNow();
+  const best = bestHand(ctx).slice(0,5).map(x=>{
+    const c=card(x.id);
+    const p = bayesProbDone(x.id, ctx);
+    return `${c.name} (Rel ${Math.round(p*100)}%, Pot +${c.pot}, Cost ${c.cost})`;
+  });
+  $("insTomorrow").textContent = best.join(" · ") || "—";
 }
 
-function bindNav(){
-  document.querySelectorAll(".tab, .btab").forEach(btn=>{
-    btn.addEventListener("click", ()=>switchView(btn.dataset.view));
-  });
+function renderHub(){
+  const t = app.today.telemetry;
+  const doneCount = app.today.hand.filter(id=>!!app.today.done[id]).length;
+  const doneRatio = app.today.hand.length ? doneCount/app.today.hand.length : 0;
+
+  const readiness = computeReadiness(t, doneRatio);
+  const momentum = computeMomentum(readiness, doneCount, app.today.hand.length);
+
+  const ctx = { readiness, stress:t.stress??5, energy:t.energy??5 };
+  const tomorrow = app.today.hand.length
+    ? monteCarloTomorrow(app.today.hand, ctx)
+    : monteCarloTomorrow(bestHand(ctx).map(x=>x.id), ctx);
+
+  $("hubReadiness").textContent = `${readiness}%`;
+  $("hubMomentum").textContent = `${momentum}`;
+  $("hubTomorrow").textContent = `${tomorrow}%`;
+  $("hubPot").textContent = `${app.today.score || 0}`;
+
+  const liveDay = {
+    telemetry: app.today.telemetry,
+    hand: app.today.hand,
+    done: app.today.done,
+    history: app.today.hand.map(id=>{
+      const c=card(id);
+      return { id, done:!!app.today.done[id], pot:c?.pot||0, cost:c?.cost||0, tags:c?.tags||[], block:c?.block||"" };
+    })
+  };
+  const actualLines = computeLines(liveDay);
+  const holoLines = buildHoloLines();
+
+  drawSpatialLines(actualLines, holoLines);
+
+  const look = getLookback(app.today.date, 20);
+  const actualR = look.map(d=>d.summary?.readiness ?? 50);
+  actualR.push(readiness);
+
+  const predR=[];
+  let last=readiness;
+  for(let i=0;i<7;i++){
+    const drift = (Math.random()*2 - 1);
+    const tg = {
+      ...t,
+      energy: clamp(t.energy + drift*0.2, 1, 10),
+      stress: clamp(t.stress - drift*0.15, 1, 10),
+      mood: clamp(t.mood + drift*0.1, 1, 10),
+      motivation: clamp(t.motivation + drift*0.1, 1, 10)
+    };
+    const ctxG = { readiness:last, stress:tg.stress, energy:tg.energy };
+    const hand = app.today.hand.length ? app.today.hand : bestHand(ctxG).map(x=>x.id);
+    const exp = expectedDoneRatio(hand, ctxG);
+    const r = computeReadiness(tg, exp);
+    last = Math.round(0.65*last + 0.35*r);
+    predR.push(last);
+  }
+
+  drawReadiness(actualR.slice(Math.max(0, actualR.length-14)), predR);
+
+  const micro = microInsight(readiness, doneCount, app.today.hand.length, tomorrow);
+  $("microInsight").textContent = micro;
+}
+
+function microInsight(readiness, doneCount, handCount, tomorrow){
+  if(handCount===0) return "Pick a hand: 3–5 cards. Then the model can learn you.";
+  const ratio = handCount ? Math.round((doneCount/handCount)*100) : 0;
+  if(readiness < 45 && ratio >= 60) return "Low readiness but you still executed. That’s rare grit—protect sleep tonight.";
+  if(readiness > 70 && ratio < 40) return "High readiness, low execution. Your bottleneck is choice friction, not energy.";
+  if(tomorrow < 45) return "Tomorrow risk is high. Reduce cost: pick fewer, cheaper cards.";
+  if(tomorrow > 70) return "Tomorrow looks strong. One high-pot card could compound.";
+  return `Execution ${ratio}%. Keep the hand small.`;
+}
+
+function generateCoach(){
+  const text = ($("aiPrompt").value || "").trim();
+  const t = app.today.telemetry;
+  const ctx = ctxNow();
+  const { leverage, remove } = computeTwoIdeas();
+  const hand = app.today.hand.map(id=>card(id)?.name).filter(Boolean);
+  const missed = app.today.hand.filter(id=>!app.today.done[id]).map(id=>card(id)?.name).filter(Boolean);
+
+  // Offline "AI" coach: deterministic, data-aware, no API needed.
+  const bullets = [];
+  bullets.push(`Context: Sleep ${String(t.sleep||"ok").toUpperCase()}, Energy ${t.energy}/10, Stress ${t.stress}/10, Readiness ${ctx.readiness}%.`);
+  bullets.push(`Hand: ${hand.join(", ") || "—"}. Done: ${app.today.hand.filter(id=>app.today.done[id]).length}/${app.today.hand.length}.`);
+  bullets.push(`Leverage: ${leverage}. Remove: ${remove}.`);
+  if(missed.length) bullets.push(`Missed: ${missed.slice(0,3).join(", ")}${missed.length>3?"…":""}.`);
+
+  // Pattern nudges
+  if(t.stress >= 7) bullets.push("Rule: When stress ≥ 7, prioritize one sleep-tag card + one low-cost focus card. Drop heavy training.");
+  if(t.energy <= 4) bullets.push("Rule: When energy ≤ 4, pick 3 cards max. Win the day with consistency, not heroics.");
+  if(ctx.readiness >= 70 && missed.length) bullets.push("You had fuel but didn’t convert. Tomorrow: reduce options; commit earlier.");
+
+  // Prompt handling
+  if(text){
+    bullets.push("Your note:");
+    bullets.push(text.length>220 ? text.slice(0,220)+"…" : text);
+    bullets.push("Rewrite (principle format):");
+    bullets.push("1) What triggered drift?");
+    bullets.push("2) What single action repaired trajectory?");
+    bullets.push("3) What will you remove tomorrow to reduce friction?");
+  }else{
+    bullets.push("Write 3 lines about today. The model learns faster when your reality is explicit.");
+  }
+
+  const out = bullets.join("\n");
+  app.today.coach = out;
+  $("aiCoach").textContent = out;
+  save();
+}
+
+function copyPrompt(){
+  const t = app.today.telemetry;
+  const done = app.today.hand.filter(id=>!!app.today.done[id]).map(id=>card(id)?.name).filter(Boolean);
+  const missed = app.today.hand.filter(id=>!app.today.done[id]).map(id=>card(id)?.name).filter(Boolean);
+  const ctx = ctxNow();
+
+  const prompt =
+`You are my ruthless performance mentor. Analyze my day with zero fluff.
+Context: sleep=${t.sleep}, energy=${t.energy}/10, stress=${t.stress}/10, mood=${t.mood}/10, readiness=${ctx.readiness}%.
+Hand: ${app.today.hand.map(id=>card(id)?.name).filter(Boolean).join(", ")}.
+Done: ${done.join(", ") || "—"}.
+Missed: ${missed.join(", ") || "—"}.
+My note: ${($("aiPrompt").value||"").trim() || "—"}.
+
+Give exactly:
+1) One leverage action (highest ROI tomorrow).
+2) One removal (friction reducer).
+3) One if-then rule for bad mornings.
+No more than 120 words.`;
+
+  navigator.clipboard?.writeText(prompt).then(()=>toast("Prompt copied")).catch(()=>toast("Copy failed"));
+}
+
+function finalizeDay(){
+  if(app.today.finalized) return;
+
+  const hand = [...app.today.hand];
+  const hist = [];
+  for(const id of hand){
+    const c = card(id);
+    if(!c) continue;
+    app.today.selectedCount[id] = (app.today.selectedCount[id]||0) + 1;
+    hist.push({ id, done:!!app.today.done[id], pot:c.pot, cost:c.cost, tags:c.tags, block:c.block });
+  }
+  app.today.history = hist;
+
+  const doneCount = hand.filter(id=>!!app.today.done[id]).length;
+  const doneRatio = hand.length ? doneCount/hand.length : 0;
+
+  const readiness = computeReadiness(app.today.telemetry, doneRatio);
+  const momentum = computeMomentum(readiness, doneCount, hand.length);
+
+  app.today.lines = computeLines(app.today);
+  app.today.summary = { readiness, momentum, doneCount, handCount: hand.length, score: app.today.score || 0 };
+  app.today.finalized = true;
+
+  toast("Finalized");
+  save();
+  renderAll();
+  renderCalendar();
+}
+
+function reveal(){
+  if(app.today.finalized){ toast("Day locked"); return; }
+  app.today.revealed = true;
+  toast("Reveal: mark reality");
+  switchView("home");
+}
+
+function exportJSON(){
+  const blob = new Blob([JSON.stringify(app,null,2)],{type:"application/json"});
+  const url = URL.createObjectURL(blob);
+  const a=document.createElement("a");
+  a.href=url; a.download="spatial_peak_data.json"; a.click();
+}
+
+function shiftMonth(delta){
+  const d = new Date(app.calendar.year, app.calendar.month + delta, 1);
+  app.calendar.year = d.getFullYear();
+  app.calendar.month = d.getMonth();
+  renderCalendar();
+  save();
+}
+
+function renderAll(){
+  renderTelemetry();
+  renderHome();
+  renderHub();
+  renderLibrary();
+  renderInsights();
+  save();
 }
 
 function bindTelemetry(){
-  document.querySelectorAll('input[type="range"][data-field]').forEach(input=>{
+  $all('input[type="range"][data-field]').forEach(input=>{
     input.addEventListener("input", ()=>{
       if(app.today.finalized) return;
       const f=input.dataset.field;
       app.today.telemetry[f]=Number(input.value);
-      const label=document.getElementById(`${f}Label`);
-      if(label) label.textContent=`${input.value}/10`;
+      $(`${f}Label`).textContent = `${input.value}/10`;
       renderAll();
     });
   });
 
-  const sel=document.querySelector('select[data-field="sleep"]');
-  if(sel){
-    sel.addEventListener("change", ()=>{
-      if(app.today.finalized) return;
-      app.today.telemetry.sleep=sel.value;
-      const sleepLabel=document.getElementById("sleepLabel");
-      if(sleepLabel) sleepLabel.textContent=sel.value.toUpperCase();
-      renderAll();
-    });
-  }
-
-  const notes=document.getElementById("notes");
-  if(notes){
-    notes.addEventListener("input", ()=>{
-      if(app.today.finalized) return;
-      app.today.notes=notes.value;
-      save();
-    });
-  }
-}
-
-function showQuickTelemetry(show){
-  const qt=document.getElementById("quickTelemetry");
-  if(!qt) return;
-  qt.classList.toggle("hidden", !show);
-}
-
-function bindQuickTelemetry(){
-  const qe=document.getElementById("qtEnergy");
-  const qs=document.getElementById("qtStress");
-  const qm=document.getElementById("qtMood");
-
-  const apply = () => {
+  const sel = document.querySelector('select[data-field="sleep"]');
+  sel.addEventListener("change", ()=>{
     if(app.today.finalized) return;
-    if(qe) app.today.telemetry.energy = Number(qe.value);
-    if(qs) app.today.telemetry.stress = Number(qs.value);
-    if(qm) app.today.telemetry.mood = Number(qm.value);
-    syncQuickTelemetryLabels();
+    app.today.telemetry.sleep = sel.value;
+    $("sleepLabel").textContent = sel.value.toUpperCase();
+    renderAll();
+  });
+
+  $("notes").addEventListener("input", ()=>{
+    if(app.today.finalized) return;
+    app.today.notes = $("notes").value;
+    save();
+  });
+}
+
+function showQT(show){
+  $("qt").classList.toggle("hidden", !show);
+}
+
+function syncQT(){
+  $("qtEnergyV").textContent = `${$("qtEnergy").value}`;
+  $("qtStressV").textContent = `${$("qtStress").value}`;
+  $("qtMoodV").textContent = `${$("qtMood").value}`;
+}
+
+function bindQT(){
+  const apply = ()=>{
+    if(app.today.finalized) return;
+    app.today.telemetry.energy = Number($("qtEnergy").value);
+    app.today.telemetry.stress = Number($("qtStress").value);
+    app.today.telemetry.mood = Number($("qtMood").value);
+    syncQT();
     renderAll();
   };
+  $("qtEnergy").addEventListener("input", apply);
+  $("qtStress").addEventListener("input", apply);
+  $("qtMood").addEventListener("input", apply);
 
-  if(qe) qe.addEventListener("input", apply);
-  if(qs) qs.addEventListener("input", apply);
-  if(qm) qm.addEventListener("input", apply);
+  $("qtClose").addEventListener("click", ()=>showQT(false));
+  $("qtBack").addEventListener("click", ()=>showQT(false));
 
-  const close=document.getElementById("qtClose");
-  const back=document.getElementById("qtBackdrop");
-  if(close) close.addEventListener("click", ()=>showQuickTelemetry(false));
-  if(back) back.addEventListener("click", ()=>showQuickTelemetry(false));
-
-  const sheet=document.getElementById("qtSheet");
-  if(sheet){
-    let startY=null;
-    sheet.addEventListener("touchstart",(e)=>{ startY=e.touches[0].clientY; }, {passive:true});
-    sheet.addEventListener("touchmove",(e)=>{
-      if(startY==null) return;
-      const dy=e.touches[0].clientY-startY;
-      if(dy>90){ startY=null; showQuickTelemetry(false); }
-    }, {passive:true});
-  }
+  const sheet=$("qtSheet");
+  let startY=null;
+  sheet.addEventListener("touchstart",(e)=>{ startY=e.touches[0].clientY; },{passive:true});
+  sheet.addEventListener("touchmove",(e)=>{
+    if(startY==null) return;
+    const dy=e.touches[0].clientY-startY;
+    if(dy>90){ startY=null; showQT(false); }
+  },{passive:true});
 }
 
-function bindScoreboardDoubleTap(){
-  const hub=document.getElementById("hubCard");
-  if(!hub) return;
+function bindHubDoubleTap(){
+  const hub=$("hubCard");
   let lastAt=0;
-
-  const handle = () => {
+  const handle=()=>{
     const now=Date.now();
     if(now-lastAt <= DOUBLE_TAP_MS){
       lastAt=0;
-      showQuickTelemetry(true);
+      showQT(true);
       toast("Quick Telemetry");
       return;
     }
     lastAt=now;
   };
-
   hub.addEventListener("click", handle);
-  hub.addEventListener("keydown", (e)=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); handle(); }});
+  hub.addEventListener("keydown",(e)=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); handle(); }});
 }
 
 function bindButtons(){
-  const fin=document.getElementById("finalizeBtn");
-  const fab=document.getElementById("fabFinalize");
-  if(fin) fin.addEventListener("click", finalizeDay);
-  if(fab) fab.addEventListener("click", finalizeDay);
+  $("finalizeBtn").addEventListener("click", finalizeDay);
+  $("revealBtn").addEventListener("click", reveal);
+  $("quickTelemetryBtn").addEventListener("click", ()=>showQT(true));
+  $("goLibraryBtn").addEventListener("click", ()=>switchView("library"));
 
-  const exp=document.getElementById("exportBtn");
-  if(exp) exp.addEventListener("click", exportJSON);
+  $("autoHandBtn").addEventListener("click", ()=>{ if(!app.today.finalized){ autoHand(); toast("Auto-hand"); }});
+  $("clearHandBtn").addEventListener("click", ()=>{
+    if(app.today.finalized) return;
+    app.today.hand=[]; app.today.done={}; app.today.score=0;
+    renderAll(); toast("Cleared");
+  });
+
+  $("prevMonthBtn").addEventListener("click", ()=>shiftMonth(-1));
+  $("nextMonthBtn").addEventListener("click", ()=>shiftMonth(1));
+
+  $("search").addEventListener("input", renderLibrary);
+
+  $("exportBtn").addEventListener("click", exportJSON);
+
+  $("generateCoachBtn").addEventListener("click", ()=>{ generateCoach(); toast("Coach updated"); });
+  $("copyPromptBtn").addEventListener("click", copyPrompt);
+}
+
+function bindNav(){
+  $all(".tab").forEach(btn=>{
+    btn.addEventListener("click", ()=> switchView(btn.dataset.view));
+  });
 }
 
 function finalDiagnostic(){
   const ids = [
-    "activeRail","librarySections","goldRail","finalizeBtn",
-    "hubReadiness","hubMomentum","hubTomorrow","hubCard","hubChart",
-    "quickTelemetry","qtEnergy","qtStress","qtMood","qtBackdrop","qtSheet"
+    "hubCard","hubReadiness","hubMomentum","hubTomorrow","hubPot",
+    "linesCanvas","readinessCanvas",
+    "handRail","library","calGrid",
+    "finalizeBtn","revealBtn",
+    "qt","qtEnergy","qtStress","qtMood","qtBack","qtSheet",
+    "exportBtn","search"
   ];
-  const missing = [];
-  for(const id of ids) if(!document.getElementById(id)) missing.push(id);
+  const missing = ids.filter(id=>!$(id));
   if(!app.today || !app.today.date) missing.push("today");
   if(!Array.isArray(app.days)) missing.push("days");
-
-  if(missing.length) toast("DIAGNOSTIC: missing " + missing[0]);
-  else toast("READY");
+  toast(missing.length ? ("DIAGNOSTIC: missing " + missing[0]) : "READY");
 }
 
 function init(){
   load();
   ensureToday();
+  setCalDefault();
+
   bindNav();
-  bindTelemetry();
-  bindQuickTelemetry();
-  bindScoreboardDoubleTap();
   bindButtons();
+  bindTelemetry();
+  bindQT();
+  bindHubDoubleTap();
+
+  renderCalendar();
   renderAll();
   finalDiagnostic();
 }
